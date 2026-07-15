@@ -1,0 +1,63 @@
+@font-face {
+  font-family: 'Rawline';
+  font-style: normal;
+  font-weight: 100;
+  src: url('./fonts/rawline/rawline-100.woff') format('woff');
+}
+
+@font-face {
+  font-family: 'Rawline';
+  font-style: normal;
+  font-weight: 400;
+  src: url('./fonts/rawline/rawline-400.woff') format('woff');
+}
+
+@font-face {
+  font-family: 'Rawline';
+  font-style: normal;
+  font-weight: 600;
+  src: url('./fonts/rawline/rawline-600.woff') format('woff');
+}
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --dsp-green: #42916e;
+    --dsp-blue: #1351b4;
+    --dsp-navy: #071d41;
+    --dsp-cream: #f9f2d2;
+    --dsp-filter-bg: #f2f2f2;
+    --dsp-footer: #071d41;
+    --background: 0 0% 100%;
+    --foreground: 0 0% 20%;
+    --border: 0 0% 89.8%;
+  }
+
+  body {
+    @apply bg-white text-foreground antialiased;
+    margin: 0;
+    min-height: 100vh;
+    font-family: 'Rawline', 'Segoe UI', sans-serif;
+  }
+
+  /* Botões: gov.br DS + cores do Consulta Pública */
+  .br-button.primary {
+    background-color: #42916e !important;
+    border-color: #42916e !important;
+  }
+
+  .br-button.secondary,
+  .br-button.inverted {
+    background-color: #ffffff !important;
+    color: #42916e !important;
+    border: 1px solid #42916e !important;
+  }
+
+  .br-button:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+}
