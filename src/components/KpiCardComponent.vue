@@ -12,7 +12,7 @@ defineProps<{
 </script>
 
 <template>
-  <div class="br-card overflow-hidden rounded shadow-sm">
+  <div class="br-card h-full w-full overflow-hidden rounded shadow-sm">
     <div
       class="flex min-h-[72px] items-center justify-center px-3 py-4 text-center text-white"
       :style="{ backgroundColor: accentColor || '#42916E' }"

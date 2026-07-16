@@ -3,6 +3,7 @@ import { onMounted, ref } from 'vue'
 import SearchFilterComponent, {
   type SearchFilterPayload,
 } from '@/components/SearchFilterComponent.vue'
+import DetailSearchComponent from '@/components/DetailSearchComponent.vue'
 import KpiCardComponent from '@/components/KpiCardComponent.vue'
 import { homeSearchConfig } from '@/config/searchHierarchy'
 import { mockHomeKpis, resolveHomeKpis, type KpiItem } from '@/config/homeKpis'
@@ -54,7 +55,7 @@ const onSearch = async (payload: SearchFilterPayload) => {
     }
 
     if (!payload.level2) {
-      searchError.value = 'Selecione ao menos uma UF para buscar.'
+      searchError.value = 'Selecione ao menos o nível 2 para buscar.'
       return
     }
 
@@ -101,28 +102,16 @@ onMounted(() => {
         <p v-if="searching" class="status-msg">Buscando...</p>
         <p v-else-if="searchError" class="status-msg status-msg--error">{{ searchError }}</p>
 
-        <section v-if="detailByIdentifier" class="detail-box">
-          <h2>Detalhe do identificador</h2>
-          <ul>
-            <li v-if="detailByIdentifier.codeProperty">
-              Código: {{ detailByIdentifier.codeProperty }}
-            </li>
-            <li v-if="detailByIdentifier.nameState">
-              UF: {{ detailByIdentifier.nameState }}
-            </li>
-            <li v-if="detailByIdentifier.nameCity">
-              Município: {{ detailByIdentifier.nameCity }}
-            </li>
-            <li v-if="detailByIdentifier.haRegisteredArea != null">
-              Área: {{ detailByIdentifier.haRegisteredArea }} ha
-            </li>
-          </ul>
-        </section>
+        <DetailSearchComponent
+          v-if="detailByIdentifier"
+          :detail="detailByIdentifier"
+        />
 
         <section v-else-if="kpis.length" class="data-cards-section">
           <div class="data-cards">
             <div v-for="kpi in kpis" :key="kpi.id" class="data-card-container">
               <KpiCardComponent
+                class="data-card"
                 :title="kpi.title"
                 :value="kpi.value"
                 :unit-of-measurement="kpi.unitOfMeasurement"
@@ -203,42 +192,42 @@ onMounted(() => {
   color: #b9382e;
 }
 
-.detail-box {
-  margin-bottom: 24px;
-  padding: 16px 20px;
-  border: 1px solid #70707045;
-  border-radius: 4px;
-}
-
-.detail-box h2 {
-  margin: 0 0 12px;
-  font-size: 18px;
-  color: #42916e;
-  font-weight: 600;
-}
-
-.detail-box ul {
-  margin: 0;
-  padding-left: 18px;
-  color: #333;
-}
-
 .data-cards-section {
   margin-bottom: 32px;
+  width: 100%;
 }
 
+/*
+ * Largura de cada card = 1/5 da faixa do filtro (máx. 5 KPIs).
+ * Com menos de 5, o mesmo tamanho e o grupo fica centralizado.
+ */
 .data-cards {
+  --kpi-gap: 16px;
+  --kpi-max-slots: 5;
   display: flex;
   flex-direction: row;
-  flex-wrap: wrap;
-  gap: 16px;
+  flex-wrap: nowrap;
+  justify-content: center;
+  gap: var(--kpi-gap);
+  width: 100%;
   margin-bottom: 26px;
 }
 
 .data-card-container {
-  flex: 1 1 160px;
-  max-width: 280px;
+  flex: 0 0
+    calc(
+      (100% - (var(--kpi-max-slots) - 1) * var(--kpi-gap)) / var(--kpi-max-slots)
+    );
+  width: calc(
+    (100% - (var(--kpi-max-slots) - 1) * var(--kpi-gap)) / var(--kpi-max-slots)
+  );
+  min-width: 0;
   padding: 8px 0;
+  box-sizing: border-box;
+}
+
+.data-card {
+  width: 100%;
 }
 
 @media screen and (max-width: 950px) {
@@ -253,10 +242,11 @@ onMounted(() => {
 
   .data-cards {
     flex-direction: column;
+    flex-wrap: wrap;
   }
 
   .data-card-container {
-    max-width: 100%;
+    flex: 1 1 auto;
     width: 100%;
   }
 }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { formatValue, formatValueInt } from '@/utils/format'
+import { formatPropertyMeasures, formatValue, formatValueInt } from '@/utils/format'
 
 describe('format', () => {
   describe('formatValue', () => {
@@ -28,6 +28,18 @@ describe('format', () => {
     it('should format as integer without decimals', () => {
       expect(formatValueInt(128450.7)).toBe('128.451')
       expect(formatValueInt(42)).toBe('42')
+    })
+  })
+
+  describe('formatPropertyMeasures', () => {
+    it('should format with two decimal places', () => {
+      expect(formatPropertyMeasures(120.5)).toBe('120,50')
+      expect(formatPropertyMeasures('2,5')).toBe('2,50')
+    })
+
+    it('should return dash for invalid values', () => {
+      expect(formatPropertyMeasures(null)).toBe('—')
+      expect(formatPropertyMeasures('abc')).toBe('—')
     })
   })
 })

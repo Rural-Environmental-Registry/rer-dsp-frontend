@@ -29,7 +29,7 @@ describe('SearchFilterComponent', () => {
     ])
   })
 
-  it('should load UF options on mount', async () => {
+  it('should load level 2 options on mount', async () => {
     const wrapper = mount(SearchFilterComponent)
     await flushPromises()
 

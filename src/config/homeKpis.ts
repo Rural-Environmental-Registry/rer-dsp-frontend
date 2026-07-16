@@ -20,7 +20,7 @@ export interface KpiItem {
 export const DEFAULT_KPI_COLORS = ['#CED6E5', '#C1D2F2', '#98B7EC', '#97CCE3', '#B6C3D9']
 
 /**
- * Mock com 3 KPIs. Para testar 1–5, basta acrescentar/remover itens neste array
+ * Mock com até 5 KPIs. Para testar 1–5, acrescente/remova itens neste array
  * (o util abaixo garante o limite).
  */
 export const mockHomeKpis: KpiItem[] = [

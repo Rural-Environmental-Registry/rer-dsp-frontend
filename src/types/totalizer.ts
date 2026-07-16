@@ -18,6 +18,7 @@ export interface DetailByIdentifierDTO {
   codeProperty?: string
   latitude?: string
   longitude?: string
+  geographicCoordinatesOfCentroid?: string
   idState?: string
   nameState?: string
   nameCity?: string

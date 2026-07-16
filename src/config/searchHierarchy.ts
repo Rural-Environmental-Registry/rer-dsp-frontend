@@ -1,12 +1,12 @@
 /**
  * Configuração da busca.
- * Rótulos/níveis visíveis por tela. Depois o backend pode sobrescrever.
+ * Rótulos/níveis visíveis por tela — genéricos (DPG). Depois o backend pode sobrescrever.
  *
- * Mapeamento atual = Consulta Pública:
+ * Mapeamento interno atual (= Consulta Pública, só no código):
  * - level1 = região (só Downloads)
- * - level2 = UF
+ * - level2 = UF / estado
  * - level3 = município
- * - identifier = nº CAR / identificador
+ * - identifier = identificador do registro
  */
 
 export type HierarchyLevelKey = 'level1' | 'level2' | 'level3'
@@ -35,9 +35,9 @@ export interface SearchFormConfig {
 }
 
 export const hierarchyFieldsByKey: Record<HierarchyLevelKey, HierarchyFieldConfig> = {
-  level1: { key: 'level1', label: 'Região', placeholder: 'Selecione a região' },
-  level2: { key: 'level2', label: 'UF', placeholder: 'Selecione a UF' },
-  level3: { key: 'level3', label: 'Município', placeholder: 'Selecione o município' },
+  level1: { key: 'level1', label: 'Nível 1', placeholder: 'Selecione o nível 1' },
+  level2: { key: 'level2', label: 'Nível 2', placeholder: 'Selecione o nível 2' },
+  level3: { key: 'level3', label: 'Nível 3', placeholder: 'Selecione o nível 3' },
 }
 
 export const homeSearchConfig: SearchFormConfig = {
@@ -45,8 +45,8 @@ export const homeSearchConfig: SearchFormConfig = {
   hierarchyKeys: ['level2', 'level3'],
   identifier: {
     key: 'identifier',
-    label: 'Nº do CAR',
-    placeholder: 'Informe o número do CAR',
+    label: 'Identificador',
+    placeholder: 'Informe o identificador',
   },
 }
 

@@ -85,7 +85,7 @@ function isFieldDisabled(key: HierarchyLevelKey): boolean {
 }
 
 async function loadHomeRootOptions(): Promise<void> {
-  // Home: nível 2 = UF (raiz), nível 3 = município
+  // Home: nível 2 é a raiz; nível 3 depende do nível 2
   const states = await getStates()
   level2Options.value = statesToSelectOptions(states)
   level3Options.value = []
