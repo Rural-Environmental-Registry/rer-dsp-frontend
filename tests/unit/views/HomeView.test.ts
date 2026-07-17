@@ -32,7 +32,7 @@ describe('HomeView', () => {
     vi.clearAllMocks()
     vi.mocked(getTotalizersByStateOrCity).mockResolvedValue([
       {
-        name: 'Imóveis cadastrados',
+        name: 'Registered properties',
         code: 'REGISTERED_AREA',
         value: 100,
         unitOfMeasurement: 'un.',
@@ -77,9 +77,9 @@ describe('HomeView', () => {
     })
     await flushPromises()
 
-    expect(wrapper.text()).toContain('Detalhes da pesquisa')
+    expect(wrapper.text()).toContain('Search details')
     expect(wrapper.text()).toContain('DF123456789012')
-    expect(wrapper.text()).toContain('Baixar feições')
+    expect(wrapper.text()).toContain('Download features')
   })
 
   it('should render banner and load initial KPIs', async () => {
@@ -101,6 +101,6 @@ describe('HomeView', () => {
     expect(wrapper.exists()).toBe(true)
     expect(wrapper.text()).toContain('Data Sharing Platform')
     expect(getTotalizersByStateOrCity).toHaveBeenCalled()
-    expect(wrapper.text()).toContain('Imóveis cadastrados')
+    expect(wrapper.text()).toContain('Registered properties')
   })
 })

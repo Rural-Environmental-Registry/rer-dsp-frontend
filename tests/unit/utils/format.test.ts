@@ -9,9 +9,9 @@ describe('format', () => {
       expect(formatValue('')).toBe('—')
     })
 
-    it('should format numbers with pt-BR separators', () => {
-      expect(formatValue(128450)).toBe('128.450')
-      expect(formatValue(2456789.5)).toBe('2.456.789,5')
+    it('should format numbers with en-US separators', () => {
+      expect(formatValue(128450)).toBe('128,450')
+      expect(formatValue(2456789.5)).toBe('2,456,789.5')
     })
 
     it('should return original string when not numeric', () => {
@@ -26,15 +26,15 @@ describe('format', () => {
     })
 
     it('should format as integer without decimals', () => {
-      expect(formatValueInt(128450.7)).toBe('128.451')
+      expect(formatValueInt(128450.7)).toBe('128,451')
       expect(formatValueInt(42)).toBe('42')
     })
   })
 
   describe('formatPropertyMeasures', () => {
     it('should format with two decimal places', () => {
-      expect(formatPropertyMeasures(120.5)).toBe('120,50')
-      expect(formatPropertyMeasures('2,5')).toBe('2,50')
+      expect(formatPropertyMeasures(120.5)).toBe('120.50')
+      expect(formatPropertyMeasures('2,5')).toBe('2.50')
     })
 
     it('should return dash for invalid values', () => {

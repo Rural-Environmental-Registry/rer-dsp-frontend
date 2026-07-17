@@ -12,7 +12,7 @@ const props = withDefaults(
     disabled?: boolean
   }>(),
   {
-    placeholder: 'Selecione',
+    placeholder: 'Select',
     modelValue: '',
     disabled: false,
   },

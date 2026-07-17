@@ -4,11 +4,6 @@ interface RuntimeEnv {
 
 let cachedBaseUrl: string | null = null
 
-/**
- * Resolve a URL do backend.
- * Ordem: VITE_DSP_API_URL (build/Docker) → config/env.json (dev local).
- * Assim o localhost do env.json não sobrescreve a URL relativa no container.
- */
 export async function resolveApiBaseUrl(): Promise<string> {
   if (cachedBaseUrl) {
     return cachedBaseUrl
@@ -32,11 +27,11 @@ export async function resolveApiBaseUrl(): Promise<string> {
       }
     }
   } catch {
-    // Sem env.json — erro abaixo.
+    // fall through
   }
 
   throw new Error(
-    'URL da API não configurada. Defina VITE_DSP_API_URL ou public/config/env.json (urlBackend).',
+    'API URL is not configured. Set VITE_DSP_API_URL or public/config/env.json (urlBackend).',
   )
 }
 
@@ -48,7 +43,7 @@ async function buildUrl(path: string): Promise<string> {
 
 async function parseJson<T>(response: Response): Promise<T> {
   if (!response.ok) {
-    throw new Error(`HTTP ${response.status} em ${response.url}`)
+    throw new Error(`HTTP ${response.status} at ${response.url}`)
   }
   return (await response.json()) as T
 }
@@ -67,6 +62,25 @@ export async function httpPost<T>(path: string, body: unknown): Promise<T> {
     body: JSON.stringify(body),
   })
   return parseJson<T>(response)
+}
+
+export async function httpGetBlob(
+  path: string,
+): Promise<{ blob: Blob; fileName: string | null }> {
+  const url = await buildUrl(path)
+  const response = await fetch(url)
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status} at ${response.url}`)
+  }
+
+  const disposition = response.headers.get('Content-Disposition')
+  let fileName: string | null = null
+  if (disposition) {
+    const match = /filename="?([^"]+)"?/i.exec(disposition)
+    fileName = match?.[1] ?? null
+  }
+
+  return { blob: await response.blob(), fileName }
 }
 
 export function resetHttpClient(): void {

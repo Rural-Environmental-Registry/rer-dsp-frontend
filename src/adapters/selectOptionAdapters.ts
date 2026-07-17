@@ -25,7 +25,6 @@ export function regionsToSelectOptions(regions: RegionDTO[]): SelectOption[] {
   }))
 }
 
-/** Converte totalizers da API em KPIs da home (máx. 5). */
 export function totalizersToKpis(totalizers: TotalizerDTO[]): KpiItem[] {
   return totalizers.slice(0, MAX_HOME_KPIS).map((item, index) => {
     const optionalValue =

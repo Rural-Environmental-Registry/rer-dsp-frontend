@@ -19,7 +19,7 @@ describe('totalizerService', () => {
   describe('getTotalizersByStateOrCity', () => {
     it('should post filter and return totalizers', async () => {
       const filter = { idState: 'DF', idsCities: [5300108] }
-      const mockData = [{ name: 'Imóveis', value: 10 }]
+      const mockData = [{ name: 'Properties', value: 10 }]
       vi.mocked(httpPost).mockResolvedValue(mockData)
 
       const result = await getTotalizersByStateOrCity(filter)
@@ -50,13 +50,13 @@ describe('totalizerService', () => {
     })
 
     it('should return null on HTTP 404', async () => {
-      vi.mocked(httpGet).mockRejectedValue(new Error('HTTP 404 em http://api/x'))
+      vi.mocked(httpGet).mockRejectedValue(new Error('HTTP 404 at http://api/x'))
 
       await expect(getDetailsByIdentifier('UNKNOWN')).resolves.toBeNull()
     })
 
     it('should rethrow unexpected errors', async () => {
-      vi.mocked(httpGet).mockRejectedValue(new Error('HTTP 500 em http://api/x'))
+      vi.mocked(httpGet).mockRejectedValue(new Error('HTTP 500 at http://api/x'))
 
       await expect(getDetailsByIdentifier('DF123')).rejects.toThrow('HTTP 500')
     })

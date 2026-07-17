@@ -78,7 +78,7 @@ function readFieldValue(field: DetailFieldConfig): string {
           :title="
             config.featuresDownload.enabled
               ? config.featuresDownload.label
-              : 'Disponível em breve'
+              : 'Coming soon'
           "
         >
           {{ config.featuresDownload.label }}

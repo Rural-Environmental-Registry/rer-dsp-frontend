@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
-import { faHashtag, faLayerGroup, faSearch } from '@fortawesome/free-solid-svg-icons'
+import { faSearch } from '@fortawesome/free-solid-svg-icons'
 import SelectInputComponent from '@/components/SelectInputComponent.vue'
 import TextInputComponent from '@/components/TextInputComponent.vue'
 import {
@@ -29,14 +29,17 @@ export interface SearchFilterPayload {
   level2: string
   level3: string
   identifier: string
+  theme: string
 }
 
 const props = withDefaults(
   defineProps<{
     config?: SearchFormConfig
+    themeOptions?: SelectOption[]
   }>(),
   {
     config: () => homeSearchConfig,
+    themeOptions: () => [],
   },
 )
 
@@ -50,6 +53,7 @@ const form = reactive<SearchFilterPayload>({
   level2: '',
   level3: '',
   identifier: '',
+  theme: '',
 })
 
 const loadingRoot = ref(false)
@@ -60,7 +64,6 @@ const level1Options = ref<SelectOption[]>([])
 const level2Options = ref<SelectOption[]>([])
 const level3Options = ref<SelectOption[]>([])
 
-/** Cache de regiões (Downloads): estados vêm embutidos. */
 const regionsCache = ref<RegionDTO[]>([])
 
 const visibleFields = computed(() => resolveHierarchyFields(props.config.hierarchyKeys))
@@ -85,14 +88,12 @@ function isFieldDisabled(key: HierarchyLevelKey): boolean {
 }
 
 async function loadHomeRootOptions(): Promise<void> {
-  // Home: nível 2 é a raiz; nível 3 depende do nível 2
   const states = await getStates()
   level2Options.value = statesToSelectOptions(states)
   level3Options.value = []
 }
 
 async function loadDownloadsRootOptions(): Promise<void> {
-  // Downloads: nível 1 = região; níveis 2/3 carregam depois
   const regions = await getRegionsWithStates()
   regionsCache.value = regions
   level1Options.value = regionsToSelectOptions(regions)
@@ -112,7 +113,7 @@ async function loadRootOptions(): Promise<void> {
   } catch (error) {
     console.error(error)
     loadError.value =
-      'Não foi possível carregar as opções. Verifique se a API está no ar (config/env.json).'
+      'Could not load options. Check if the API is running (config/env.json).'
     level1Options.value = []
     level2Options.value = []
     level3Options.value = []
@@ -139,7 +140,6 @@ async function onLevel1Change(regionId: string): Promise<void> {
       return
     }
 
-    // Fallback se a API de regiões não trouxer states embutidos
     const states = await getStatesByRegion(regionId)
     level2Options.value = statesToSelectOptions(states)
   } catch (error) {
@@ -193,6 +193,9 @@ onMounted(() => {
 })
 
 const canSearch = computed(() => {
+  if (props.config.hierarchyKeys.includes('level1')) {
+    return Boolean(form.level2)
+  }
   const hasHierarchy = props.config.hierarchyKeys.some((key) => Boolean(form[key]))
   const hasIdentifier = Boolean(props.config.identifier && form.identifier.trim())
   return hasHierarchy || hasIdentifier
@@ -205,6 +208,7 @@ const handleClear = () => {
   form.level2 = ''
   form.level3 = ''
   form.identifier = ''
+  form.theme = ''
   level3Options.value = []
   if (props.config.hierarchyKeys.includes('level1')) {
     level2Options.value = []
@@ -218,9 +222,9 @@ const handleClear = () => {
     <div class="filter-container-margin">
       <span class="title-checkRegistered">{{ config.title }}</span>
 
-      <p v-if="loadingRoot" class="status-msg">Carregando opções...</p>
+      <p v-if="loadingRoot" class="status-msg">Loading options...</p>
       <p v-else-if="loadError" class="status-msg status-msg--error">{{ loadError }}</p>
-      <p v-else-if="loadingChildren" class="status-msg">Atualizando opções...</p>
+      <p v-else-if="loadingChildren" class="status-msg">Updating options...</p>
 
       <div class="filter-fields-container">
         <div
@@ -250,6 +254,17 @@ const handleClear = () => {
           </TextInputComponent>
         </div>
 
+        <div v-if="config.theme" class="field-slot field-slot--theme">
+          <SelectInputComponent
+            :id="config.theme.key"
+            v-model="form.theme"
+            :label="config.theme.label"
+            :placeholder="config.theme.placeholder"
+            :items="themeOptions"
+            :disabled="loadingRoot"
+          />
+        </div>
+
         <div class="btns-container">
           <button
             type="button"
@@ -258,7 +273,7 @@ const handleClear = () => {
             @click="handleSearch"
           >
             <FontAwesomeIcon :icon="faSearch" class="mr-2" />
-            Buscar
+            Search
           </button>
           <button
             v-if="canSearch"
@@ -266,7 +281,7 @@ const handleClear = () => {
             class="br-button inverted"
             @click="handleClear"
           >
-            Limpar
+            Clear
           </button>
         </div>
       </div>
@@ -326,7 +341,8 @@ const handleClear = () => {
   flex: 1 1 240px;
 }
 
-.field-slot--identifier {
+.field-slot--identifier,
+.field-slot--theme {
   width: 25%;
   min-width: 240px;
   flex: 1 1 260px;
@@ -345,7 +361,8 @@ const handleClear = () => {
   .field-slot--level2,
   .field-slot--level3,
   .field-slot--level1,
-  .field-slot--identifier {
+  .field-slot--identifier,
+  .field-slot--theme {
     width: 100%;
     min-width: 100%;
     flex: 1 1 100%;

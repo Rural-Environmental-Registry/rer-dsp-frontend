@@ -5,8 +5,6 @@ import type {
   TotalizerFilterDTO,
 } from '@/types/totalizer'
 
-/** Mesmos endpoints do Consulta Pública: /totalizer. */
-
 export async function getTotalizersByStateOrCity(
   filter: TotalizerFilterDTO,
 ): Promise<TotalizerDTO[]> {

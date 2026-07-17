@@ -34,7 +34,7 @@ describe('SearchFilterComponent', () => {
     await flushPromises()
 
     expect(getStates).toHaveBeenCalledTimes(1)
-    expect(wrapper.text()).toContain('Consulte os dados cadastrados')
+    expect(wrapper.text()).toContain('Browse registered data')
   })
 
   it('should emit search with selected filters', async () => {
@@ -48,13 +48,14 @@ describe('SearchFilterComponent', () => {
     expect(getCitiesByState).toHaveBeenCalledWith('DF')
 
     const buttons = wrapper.findAll('button')
-    const searchButton = buttons.find((button) => button.text().includes('Buscar'))
+    const searchButton = buttons.find((button) => button.text().includes('Search'))
     await searchButton!.trigger('click')
 
     expect(wrapper.emitted('search')).toBeTruthy()
     expect(wrapper.emitted('search')?.[0]?.[0]).toMatchObject({
       level2: 'DF',
       identifier: '',
+      theme: '',
     })
   })
 
@@ -66,7 +67,7 @@ describe('SearchFilterComponent', () => {
     await selects[0].setValue('DF')
     await flushPromises()
 
-    const clearButton = wrapper.findAll('button').find((button) => button.text().includes('Limpar'))
+    const clearButton = wrapper.findAll('button').find((button) => button.text().includes('Clear'))
     await clearButton!.trigger('click')
 
     expect(wrapper.emitted('clear')).toBeTruthy()

@@ -31,7 +31,7 @@ async function loadInitialKpis(): Promise<void> {
   try {
     await loadTotalizers(null, [])
   } catch (error) {
-    console.warn('KPIs iniciais via API indisponíveis — mantendo mock.', error)
+    console.warn('Initial KPIs from API unavailable — keeping mock.', error)
     kpis.value = resolveHomeKpis(mockHomeKpis)
   }
 }
@@ -47,7 +47,7 @@ const onSearch = async (payload: SearchFilterPayload) => {
     if (identifier) {
       const detail = await getDetailsByIdentifier(identifier)
       if (!detail) {
-        searchError.value = 'Identificador não encontrado.'
+        searchError.value = 'Identifier not found.'
         return
       }
       detailByIdentifier.value = detail
@@ -55,7 +55,7 @@ const onSearch = async (payload: SearchFilterPayload) => {
     }
 
     if (!payload.level2) {
-      searchError.value = 'Selecione ao menos o nível 2 para buscar.'
+      searchError.value = 'Select at least level 2 to search.'
       return
     }
 
@@ -63,7 +63,7 @@ const onSearch = async (payload: SearchFilterPayload) => {
     await loadTotalizers(payload.level2, cityIds)
   } catch (error) {
     console.error(error)
-    searchError.value = 'Falha na busca. Verifique a API (config/env.json).'
+    searchError.value = 'Search failed. Check the API (config/env.json).'
   } finally {
     searching.value = false
   }
@@ -87,7 +87,7 @@ onMounted(() => {
         <h1>
           <strong class="project-name"> Data Sharing Platform (DSP)</strong>
         </h1>
-        <h2>Portal público de consulta geoespacial</h2>
+        <h2>Public geospatial consultation portal</h2>
       </div>
     </div>
 
@@ -99,7 +99,7 @@ onMounted(() => {
           @clear="onClear"
         />
 
-        <p v-if="searching" class="status-msg">Buscando...</p>
+        <p v-if="searching" class="status-msg">Searching...</p>
         <p v-else-if="searchError" class="status-msg status-msg--error">{{ searchError }}</p>
 
         <DetailSearchComponent
@@ -197,10 +197,6 @@ onMounted(() => {
   width: 100%;
 }
 
-/*
- * Largura de cada card = 1/5 da faixa do filtro (máx. 5 KPIs).
- * Com menos de 5, o mesmo tamanho e o grupo fica centralizado.
- */
 .data-cards {
   --kpi-gap: 16px;
   --kpi-max-slots: 5;

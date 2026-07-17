@@ -6,7 +6,7 @@ import govbrLogo from '@/assets/images/govbr.svg'
 const route = useRoute()
 
 const links = [
-  { to: '/', label: 'Página Principal', name: 'home' },
+  { to: '/', label: 'Home', name: 'home' },
   { to: '/geoservices', label: 'Downloads', name: 'geoservices' },
 ]
 
@@ -17,8 +17,8 @@ const isActive = computed(() => (name: string) => route.name === name)
   <header class="header-container">
     <div class="branding-section">
       <RouterLink to="/" class="branding-link">
-        <img :src="govbrLogo" alt="Logomarca do gov.br" class="govbr-logo" />
-        <h2>RER - Data Sharing Plataform</h2>
+        <img :src="govbrLogo" alt="gov.br logo" class="govbr-logo" />
+        <h2>RER - Data Sharing Platform</h2>
       </RouterLink>
     </div>
 

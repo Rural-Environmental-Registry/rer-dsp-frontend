@@ -8,17 +8,17 @@ const version = ref<string>(__APP_VERSION__)
   <footer class="footer-root">
     <div class="footer-main">
       <div class="footer-brand">
-        <span>RER - Data Sharing Plataform</span>
+        <span>RER - Data Sharing Platform</span>
         <span class="footer-version">v{{ version }}</span>
       </div>
       <p class="footer-hint">
-        Data Sharing Platform (DSP) — portal público de consulta geoespacial
+        Data Sharing Platform (DSP) — public geospatial consultation portal
       </p>
     </div>
     <div class="footer-copyright">
       <span>
-        Texto destinado a exibição das informações relacionadas à
-        <strong>licença de uso</strong>
+        Text intended to display information related to the
+        <strong>usage license</strong>
       </span>
     </div>
   </footer>

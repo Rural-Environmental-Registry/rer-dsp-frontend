@@ -1,14 +1,3 @@
-/**
- * Configuração da busca.
- * Rótulos/níveis visíveis por tela — genéricos (DPG). Depois o backend pode sobrescrever.
- *
- * Mapeamento interno atual (= Consulta Pública, só no código):
- * - level1 = região (só Downloads)
- * - level2 = UF / estado
- * - level3 = município
- * - identifier = identificador do registro
- */
-
 export type HierarchyLevelKey = 'level1' | 'level2' | 'level3'
 
 export interface SelectOption {
@@ -28,31 +17,43 @@ export interface IdentifierFieldConfig {
   placeholder: string
 }
 
+export interface ThemeFieldConfig {
+  key: string
+  label: string
+  placeholder: string
+}
+
 export interface SearchFormConfig {
   title: string
   hierarchyKeys: HierarchyLevelKey[]
   identifier?: IdentifierFieldConfig
+  theme?: ThemeFieldConfig
 }
 
 export const hierarchyFieldsByKey: Record<HierarchyLevelKey, HierarchyFieldConfig> = {
-  level1: { key: 'level1', label: 'Nível 1', placeholder: 'Selecione o nível 1' },
-  level2: { key: 'level2', label: 'Nível 2', placeholder: 'Selecione o nível 2' },
-  level3: { key: 'level3', label: 'Nível 3', placeholder: 'Selecione o nível 3' },
+  level1: { key: 'level1', label: 'Level 1', placeholder: 'Select level 1' },
+  level2: { key: 'level2', label: 'Level 2', placeholder: 'Select level 2' },
+  level3: { key: 'level3', label: 'Level 3', placeholder: 'Select level 3' },
 }
 
 export const homeSearchConfig: SearchFormConfig = {
-  title: 'Consulte os dados cadastrados',
+  title: 'Browse registered data',
   hierarchyKeys: ['level2', 'level3'],
   identifier: {
     key: 'identifier',
-    label: 'Identificador',
-    placeholder: 'Informe o identificador',
+    label: 'Identifier',
+    placeholder: 'Enter the identifier',
   },
 }
 
 export const downloadsSearchConfig: SearchFormConfig = {
-  title: 'Downloads',
+  title: 'Download public data',
   hierarchyKeys: ['level1', 'level2', 'level3'],
+  theme: {
+    key: 'theme',
+    label: 'Theme',
+    placeholder: 'All themes',
+  },
 }
 
 export function resolveHierarchyFields(keys: HierarchyLevelKey[]): HierarchyFieldConfig[] {

@@ -1,4 +1,3 @@
-/** Formata número com separadores pt-BR. */
 export function formatValue(value: number | string | undefined | null): string {
   if (value === undefined || value === null || value === '') {
     return '—'
@@ -9,7 +8,7 @@ export function formatValue(value: number | string | undefined | null): string {
     return String(value)
   }
 
-  return new Intl.NumberFormat('pt-BR', {
+  return new Intl.NumberFormat('en-US', {
     maximumFractionDigits: 2,
   }).format(numeric)
 }
@@ -24,12 +23,11 @@ export function formatValueInt(value: number | string | undefined | null): strin
     return String(value)
   }
 
-  return new Intl.NumberFormat('pt-BR', {
+  return new Intl.NumberFormat('en-US', {
     maximumFractionDigits: 0,
   }).format(numeric)
 }
 
-/** Formata áreas / módulos com 2 casas (padrão Consulta Pública). */
 export function formatPropertyMeasures(value: number | string | undefined | null): string {
   if (value === undefined || value === null || value === '') {
     return '—'
@@ -41,7 +39,7 @@ export function formatPropertyMeasures(value: number | string | undefined | null
     return '—'
   }
 
-  return new Intl.NumberFormat('pt-BR', {
+  return new Intl.NumberFormat('en-US', {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   }).format(numeric)

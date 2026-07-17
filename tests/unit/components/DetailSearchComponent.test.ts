@@ -29,7 +29,7 @@ describe('DetailSearchComponent', () => {
     expect(wrapper.text()).toContain('DF123456789012')
     expect(wrapper.text()).toContain('Brasília')
     expect(wrapper.text()).toContain('Distrito Federal')
-    expect(wrapper.text()).toContain('120,50 ha')
+    expect(wrapper.text()).toContain('120.50 ha')
   })
 
   it('should use the same generic labels as the home search filters', () => {
@@ -40,11 +40,11 @@ describe('DetailSearchComponent', () => {
     expect(wrapper.text()).toContain(homeSearchConfig.identifier?.label)
     expect(wrapper.text()).toContain(hierarchyFieldsByKey.level2.label)
     expect(wrapper.text()).toContain(hierarchyFieldsByKey.level3.label)
-    expect(wrapper.text()).toContain('Nível 2')
-    expect(wrapper.text()).toContain('Nível 3')
-    expect(wrapper.text()).toContain('Identificador')
+    expect(wrapper.text()).toContain('Level 2')
+    expect(wrapper.text()).toContain('Level 3')
+    expect(wrapper.text()).toContain('Identifier')
     expect(wrapper.text()).not.toContain('UF')
-    expect(wrapper.text()).not.toContain('Município')
+    expect(wrapper.text()).not.toContain('Municipality')
     expect(wrapper.text()).not.toContain('Nº do CAR')
   })
 
@@ -53,10 +53,10 @@ describe('DetailSearchComponent', () => {
       props: { detail },
     })
 
-    expect(wrapper.text()).not.toContain('Coordenadas do centróide')
-    expect(wrapper.text()).not.toContain('Módulos de referência')
+    expect(wrapper.text()).not.toContain('Centroid coordinates')
+    expect(wrapper.text()).not.toContain('Reference modules')
     expect(wrapper.text()).not.toContain('-15.793889, -47.882778')
-    expect(wrapper.text()).not.toContain('2,50')
+    expect(wrapper.text()).not.toContain('2.50')
     expect(wrapper.text()).not.toContain('15/06/2024')
   })
 
@@ -67,11 +67,11 @@ describe('DetailSearchComponent', () => {
 
     const rows = wrapper.findAll('.property-row')
     expect(rows).toHaveLength(3)
-    expect(rows[0].text()).toContain('Nível 3')
-    expect(rows[0].text()).toContain('Nível 2')
+    expect(rows[0].text()).toContain('Level 3')
+    expect(rows[0].text()).toContain('Level 2')
     expect(rows[1].text()).toContain('Latitude')
     expect(rows[1].text()).toContain('Longitude')
-    expect(rows[2].text()).toContain('Área')
+    expect(rows[2].text()).toContain('Area')
   })
 
   it('should render features download button disabled', () => {

@@ -35,7 +35,7 @@ describe('selectOptionAdapters', () => {
     it('should convert totalizers into KPIs with colors', () => {
       const result = totalizersToKpis([
         {
-          name: 'Imóveis cadastrados',
+          name: 'Registered properties',
           code: 'REGISTERED_AREA',
           value: 100,
           subItemName: 'ha',
@@ -47,7 +47,7 @@ describe('selectOptionAdapters', () => {
       expect(result).toHaveLength(1)
       expect(result[0]).toMatchObject({
         id: 'REGISTERED_AREA',
-        title: 'Imóveis cadastrados',
+        title: 'Registered properties',
         value: 100,
         unitOfMeasurement: 'un.',
         optionalLabel: 'ha',
@@ -59,7 +59,7 @@ describe('selectOptionAdapters', () => {
     it('should ignore empty optional subItemValue', () => {
       const result = totalizersToKpis([
         {
-          name: 'Área',
+          name: 'Area',
           value: 10,
           subItemValue: 0,
           unitOfMeasurement: 'ha',

@@ -1,5 +1,3 @@
-/** Tipos alinhados ao backend do Consulta Pública (totalizer). */
-
 export interface TotalizerDTO {
   name: string
   code?: string

@@ -1,5 +1,3 @@
-/** Tipos alinhados ao backend do Consulta Pública (state / city / region). */
-
 export interface StateDTO {
   id: string
   name: string
