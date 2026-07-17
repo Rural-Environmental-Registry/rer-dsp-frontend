@@ -8,6 +8,7 @@ const route = useRoute()
 const links = [
   { to: '/', label: 'Home', name: 'home' },
   { to: '/geoservices', label: 'Downloads', name: 'geoservices' },
+  { to: '/about', label: 'About', name: 'about' },
 ]
 
 const isActive = computed(() => (name: string) => route.name === name)
