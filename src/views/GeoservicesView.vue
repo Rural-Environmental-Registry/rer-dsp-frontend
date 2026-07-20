@@ -13,6 +13,10 @@ import {
   triggerBrowserDownload,
 } from '@/services/downloadService'
 import type { DownloadItemDTO } from '@/types/download'
+import MoreContents from '@/components/MoreContents.vue'
+import { getMoreContentsCards } from '@/config/moreContentsUi'
+
+const pageCards = getMoreContentsCards('geoservices')
 
 const ui = downloadsUiConfig
 const themeOptions = ref<SelectOption[]>([])
@@ -140,6 +144,8 @@ async function onDownload(item: DownloadItemDTO, format: string): Promise<void> 
         />
       </div>
     </div>
+
+    <MoreContents :cards="pageCards" />
   </div>
 </template>
 

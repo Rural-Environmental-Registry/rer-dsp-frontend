@@ -13,6 +13,10 @@ import {
   getTotalizersByStateOrCity,
 } from '@/services/totalizerService'
 import type { DetailByIdentifierDTO } from '@/types/totalizer'
+import MoreContents from '@/components/MoreContents.vue'
+import { getMoreContentsCards } from '@/config/moreContentsUi'
+
+const pageCards = getMoreContentsCards('home')
 
 const searching = ref(false)
 const searchError = ref('')
@@ -124,6 +128,8 @@ onMounted(() => {
         </section>
       </div>
     </div>
+
+    <MoreContents :cards="pageCards" />
   </div>
 </template>
 

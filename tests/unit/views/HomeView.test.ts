@@ -56,7 +56,11 @@ describe('HomeView', () => {
 
     const router = createRouter({
       history: createWebHistory(),
-      routes: [{ path: '/', component: HomeView }],
+      routes: [
+        { path: '/', component: HomeView },
+        { path: '/geoservices', component: { template: '<div />' } },
+        { path: '/about', component: { template: '<div />' } },
+      ],
     })
     await router.push('/')
     await router.isReady()
@@ -85,7 +89,11 @@ describe('HomeView', () => {
   it('should render banner and load initial KPIs', async () => {
     const router = createRouter({
       history: createWebHistory(),
-      routes: [{ path: '/', component: HomeView }],
+      routes: [
+        { path: '/', component: HomeView },
+        { path: '/geoservices', component: { template: '<div />' } },
+        { path: '/about', component: { template: '<div />' } },
+      ],
     })
     await router.push('/')
     await router.isReady()

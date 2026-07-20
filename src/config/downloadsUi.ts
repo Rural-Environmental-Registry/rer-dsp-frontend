@@ -20,7 +20,6 @@ export const downloadsUiConfig = {
   emptyValue: '—',
   formatLabels: {
     csv: 'CSV',
-    gpkg: 'GPKG',
   } as Record<string, string>,
   statusTitles: {
     available: 'Download',

@@ -3,6 +3,7 @@ import { hierarchyFieldsByKey, homeSearchConfig } from '@/config/searchHierarchy
 export type DetailFieldKey =
   | 'codeProperty'
   | 'createdAt'
+  | 'lastRectification'
   | 'nameCity'
   | 'nameState'
   | 'latitude'
@@ -40,6 +41,7 @@ export const detailByIdentifierConfig: DetailByIdentifierConfig = {
       group: 'header',
     },
     { key: 'createdAt', label: 'Registration date', group: 'header' },
+    { key: 'lastRectification', label: 'Alteration date', group: 'header' },
     {
       key: 'nameCity',
       label: hierarchyFieldsByKey.level3.label,

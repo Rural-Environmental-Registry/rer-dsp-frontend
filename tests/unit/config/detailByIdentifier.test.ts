@@ -11,7 +11,11 @@ describe('detailByIdentifier config', () => {
     const header = getDetailFieldsByGroup('header')
     const property = getDetailFieldsByGroup('property')
 
-    expect(header.map((field) => field.key)).toEqual(['codeProperty', 'createdAt'])
+    expect(header.map((field) => field.key)).toEqual([
+      'codeProperty',
+      'createdAt',
+      'lastRectification',
+    ])
     expect(property.map((field) => field.key)).toEqual([
       'nameCity',
       'nameState',
@@ -51,8 +55,11 @@ describe('detailByIdentifier config', () => {
     expect(detailByIdentifierConfig.featuresDownload.label).toBeTruthy()
   })
 
-  it('should not include lastRectification in visible fields', () => {
-    const keys = detailByIdentifierConfig.fields.map((field) => field.key)
-    expect(keys).not.toContain('lastRectification')
+  it('should include alteration date in header fields', () => {
+    const header = getDetailFieldsByGroup('header')
+    const alteration = header.find((field) => field.key === 'lastRectification')
+
+    expect(alteration).toBeDefined()
+    expect(alteration?.label).toBe('Alteration date')
   })
 })

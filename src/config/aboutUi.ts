@@ -55,7 +55,7 @@ export const aboutUiConfig = {
         {
           title: 'Downloads',
           paragraphs: [
-            'Choose Level 1, then Level 2. Level 3 and Theme filters appear after Level 2 is selected. Available formats (for example CSV and GPKG) are listed per theme.',
+            'Choose Level 1, then Level 2. Level 3 and Theme filters appear after Level 2 is selected. Available formats (for example CSV) are listed per theme.',
           ],
           bullets: [
             'Click a Level 1 chip to reveal Level 2 options.',

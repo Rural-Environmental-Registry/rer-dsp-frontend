@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
+import { createRouter, createWebHistory } from 'vue-router'
 import GeoservicesView from '@/views/GeoservicesView.vue'
 import DownloadsFilterPanel from '@/components/DownloadsFilterPanel.vue'
 import {
@@ -8,6 +9,27 @@ import {
   downloadThemeFile,
   triggerBrowserDownload,
 } from '@/services/downloadService'
+
+async function mountGeoservicesView() {
+  const router = createRouter({
+    history: createWebHistory(),
+    routes: [
+      { path: '/', component: { template: '<div />' } },
+      { path: '/geoservices', component: GeoservicesView },
+      { path: '/about', component: { template: '<div />' } },
+    ],
+  })
+  await router.push('/geoservices')
+  await router.isReady()
+
+  const wrapper = mount(GeoservicesView, {
+    global: {
+      plugins: [router],
+    },
+  })
+  await flushPromises()
+  return wrapper
+}
 
 vi.mock('@/services/downloadService', () => ({
   getDownloadThemes: vi.fn(),
@@ -40,24 +62,20 @@ describe('GeoservicesView', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     vi.mocked(getDownloadThemes).mockResolvedValue([
-      { code: 'theme_alpha', name: 'Theme Alpha', formats: ['csv', 'gpkg'], enabled: true },
+      { code: 'theme_alpha', name: 'Theme Alpha', formats: ['csv'], enabled: true },
     ])
     vi.mocked(searchDownloads).mockResolvedValue([
       {
         themeCode: 'theme_alpha',
         themeName: 'Theme Alpha',
-        formats: [
-          { format: 'csv', status: 'available' },
-          { format: 'gpkg', status: 'unavailable' },
-        ],
+        formats: [{ format: 'csv', status: 'available' }],
         lastUpdate: '2026-06-01',
       },
     ])
   })
 
   it('should load themes and search downloads from filter panel', async () => {
-    const wrapper = mount(GeoservicesView)
-    await flushPromises()
+    const wrapper = await mountGeoservicesView()
 
     expect(getDownloadThemes).toHaveBeenCalledTimes(1)
 
@@ -78,18 +96,17 @@ describe('GeoservicesView', () => {
     })
     expect(wrapper.text()).toContain('Theme Alpha')
     expect(wrapper.text()).toContain('CSV')
-    expect(wrapper.text()).toContain('GPKG')
+    expect(wrapper.text()).not.toContain('GPKG')
     expect(wrapper.text()).toContain('06/01/2026')
   })
 
-  it('should download available format and keep unavailable disabled', async () => {
+  it('should download available CSV format', async () => {
     vi.mocked(downloadThemeFile).mockResolvedValue({
       blob: new Blob(['ok']),
       fileName: 'DF_theme_alpha.csv',
     })
 
-    const wrapper = mount(GeoservicesView)
-    await flushPromises()
+    const wrapper = await mountGeoservicesView()
 
     const panel = wrapper.findComponent(DownloadsFilterPanel)
     await panel.vm.$emit('search', {
@@ -100,12 +117,11 @@ describe('GeoservicesView', () => {
     })
     await flushPromises()
 
-    const buttons = wrapper.findAll('button.download-theme')
-    const csvButton = buttons.find((button) => button.text().includes('CSV'))
-    const gpkgButton = buttons.find((button) => button.text().includes('GPKG'))
+    const csvButton = wrapper
+      .findAll('button.download-theme')
+      .find((button) => button.text().includes('CSV'))
 
     expect(csvButton?.attributes('disabled')).toBeUndefined()
-    expect(gpkgButton?.attributes('disabled')).toBeDefined()
 
     await csvButton!.trigger('click')
     await flushPromises()

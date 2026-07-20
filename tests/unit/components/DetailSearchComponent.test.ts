@@ -48,16 +48,17 @@ describe('DetailSearchComponent', () => {
     expect(wrapper.text()).not.toContain('Nº do CAR')
   })
 
-  it('should not show centroid, fiscal modules or last rectification', () => {
+  it('should show alteration date and hide centroid and fiscal modules', () => {
     const wrapper = mount(DetailSearchComponent, {
       props: { detail },
     })
 
+    expect(wrapper.text()).toContain('Alteration date')
+    expect(wrapper.text()).toContain('15/06/2024')
     expect(wrapper.text()).not.toContain('Centroid coordinates')
     expect(wrapper.text()).not.toContain('Reference modules')
     expect(wrapper.text()).not.toContain('-15.793889, -47.882778')
     expect(wrapper.text()).not.toContain('2.50')
-    expect(wrapper.text()).not.toContain('15/06/2024')
   })
 
   it('should render property fields in separate rows', () => {

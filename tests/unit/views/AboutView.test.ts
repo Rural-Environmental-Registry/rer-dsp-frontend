@@ -7,7 +7,11 @@ import { aboutUiConfig } from '@/config/aboutUi'
 async function mountAbout(query: Record<string, string> = {}) {
   const router = createRouter({
     history: createWebHistory(),
-    routes: [{ path: '/about', name: 'about', component: AboutView }],
+    routes: [
+      { path: '/', component: { template: '<div />' } },
+      { path: '/geoservices', component: { template: '<div />' } },
+      { path: '/about', name: 'about', component: AboutView },
+    ],
   })
   await router.push({ path: '/about', query })
   await router.isReady()

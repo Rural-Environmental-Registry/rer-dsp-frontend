@@ -1,4 +1,4 @@
-export type DownloadFormatCode = 'csv' | 'gpkg' | string
+export type DownloadFormatCode = 'csv' | string
 
 export type DownloadAvailabilityStatus = 'available' | 'unavailable' | 'coming_soon'
 

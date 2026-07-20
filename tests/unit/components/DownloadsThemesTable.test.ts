@@ -7,16 +7,13 @@ const items: DownloadItemDTO[] = [
   {
     themeCode: 'theme_alpha',
     themeName: 'Theme Alpha',
-    formats: [
-      { format: 'csv', status: 'available' },
-      { format: 'gpkg', status: 'unavailable' },
-    ],
+    formats: [{ format: 'csv', status: 'available' }],
     lastUpdate: '2026-06-01',
   },
 ]
 
 describe('DownloadsThemesTable', () => {
-  it('should render CP-like columns and link-style download actions', () => {
+  it('should render CP-like columns and CSV download action without GPKG', () => {
     const wrapper = mount(DownloadsThemesTable, {
       props: { items },
     })
@@ -26,17 +23,15 @@ describe('DownloadsThemesTable', () => {
     expect(wrapper.text()).toContain('Last update')
     expect(wrapper.text()).toContain('Theme Alpha')
     expect(wrapper.text()).toContain('06/01/2026')
+    expect(wrapper.text()).toContain('CSV')
+    expect(wrapper.text()).not.toContain('GPKG')
 
     const csvButton = wrapper.findAll('button.download-theme').find((button) =>
       button.text().includes('CSV'),
     )
-    const gpkgButton = wrapper.findAll('button.download-theme').find((button) =>
-      button.text().includes('GPKG'),
-    )
 
     expect(csvButton?.classes()).toContain('download-theme')
     expect(csvButton?.attributes('disabled')).toBeUndefined()
-    expect(gpkgButton?.attributes('disabled')).toBeDefined()
     expect(wrapper.find('.btn-geosservices-table').exists()).toBe(true)
   })
 

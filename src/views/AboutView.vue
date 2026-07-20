@@ -7,6 +7,10 @@ import {
   isAboutTabId,
   type AboutTabId,
 } from '@/config/aboutUi'
+import MoreContents from '@/components/MoreContents.vue'
+import { getMoreContentsCards } from '@/config/moreContentsUi'
+
+const pageCards = getMoreContentsCards('about')
 
 const ui = aboutUiConfig
 const route = useRoute()
@@ -96,6 +100,8 @@ watch(
         </div>
       </div>
     </div>
+
+    <MoreContents :cards="pageCards" />
   </div>
 </template>
 
