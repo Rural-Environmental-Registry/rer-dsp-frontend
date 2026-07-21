@@ -6,16 +6,14 @@ import HierarchyChipButton from '@/components/HierarchyChipButton.vue'
 import SelectInputComponent from '@/components/SelectInputComponent.vue'
 import {
   MAX_DOWNLOAD_LEVEL1,
-  downloadsUiConfig,
+  resolveDownloadsUiConfig,
+  type DownloadsUiConfig,
 } from '@/config/downloadsUi'
 import type { SelectOption } from '@/config/searchHierarchy'
-import {
-  getCitiesByState,
-  getRegionsWithStates,
-  getStatesByRegion,
-} from '@/services/locationService'
-import type { RegionDTO, RegionStateDTO } from '@/types/location'
-import { citiesToSelectOptions } from '@/adapters/selectOptionAdapters'
+import { getInstallationConfig } from '@/services/configService'
+import { getTerritoryOptions } from '@/services/territoryService'
+import { territoryOptionsToSelectOptions } from '@/adapters/selectOptionAdapters'
+import type { TerritoryOption } from '@/types/territory'
 
 export interface DownloadsFilterPayload {
   level1: string
@@ -39,17 +37,18 @@ const emit = defineEmits<{
   'selection-change': [payload: DownloadsFilterPayload]
 }>()
 
-const ui = downloadsUiConfig
+const ui = ref<DownloadsUiConfig>(resolveDownloadsUiConfig())
 
 const loadingRoot = ref(false)
 const loadingChildren = ref(false)
 const loadError = ref('')
 
-const regions = ref<RegionDTO[]>([])
+const level1Options = ref<TerritoryOption[]>([])
+const level2Options = ref<TerritoryOption[]>([])
+const level3Options = ref<SelectOption[]>([])
+
 const selectedLevel1Index = ref<number | null>(null)
 const selectedLevel2Index = ref<number | null>(null)
-const level2Items = ref<RegionStateDTO[]>([])
-const level3Options = ref<SelectOption[]>([])
 
 const level1Id = ref('')
 const level2Id = ref('')
@@ -77,70 +76,61 @@ function emitSelection(): void {
 }
 
 onMounted(() => {
-  void loadLevel1()
+  void bootstrap()
 })
+
+async function bootstrap(): Promise<void> {
+  const installation = await getInstallationConfig()
+  ui.value = resolveDownloadsUiConfig(installation)
+  await loadLevel1()
+}
 
 async function loadLevel1(): Promise<void> {
   loadingRoot.value = true
   loadError.value = ''
   try {
-    const data = await getRegionsWithStates()
-    regions.value = data.slice(0, MAX_DOWNLOAD_LEVEL1)
+    const data = await getTerritoryOptions('level1')
+    level1Options.value = data.slice(0, MAX_DOWNLOAD_LEVEL1)
   } catch (error) {
     console.error(error)
-    loadError.value =
-      'Could not load level 1. Check if the API is running.'
-    regions.value = []
+    loadError.value = 'Could not load level 1. Check if the API is running.'
+    level1Options.value = []
   } finally {
     loadingRoot.value = false
   }
 }
 
-async function selectLevel1(region: RegionDTO, index: number): Promise<void> {
+async function selectLevel1(option: TerritoryOption, index: number): Promise<void> {
   selectedLevel1Index.value = index
-  level1Id.value = String(region.id)
+  level1Id.value = option.id
   selectedLevel2Index.value = null
   level2Id.value = ''
   level3Id.value = ''
   themeId.value = ''
   level3Options.value = []
 
-  if (region.states?.length) {
-    level2Items.value = [...region.states].sort((a, b) =>
-      a.name.localeCompare(b.name, 'en', { sensitivity: 'base' }),
-    )
-    emitSelection()
-    return
-  }
-
   loadingChildren.value = true
   try {
-    const states = await getStatesByRegion(String(region.id))
-    level2Items.value = states.map((state) => ({
-      id: state.id,
-      name: state.name,
-      region: state.region,
-      bounderBox: state.bounderBox,
-    }))
+    level2Options.value = await getTerritoryOptions('level2', option.id)
   } catch (error) {
     console.error(error)
-    level2Items.value = []
+    level2Options.value = []
   } finally {
     loadingChildren.value = false
     emitSelection()
   }
 }
 
-async function selectLevel2(state: RegionStateDTO, index: number): Promise<void> {
+async function selectLevel2(option: TerritoryOption, index: number): Promise<void> {
   selectedLevel2Index.value = index
-  level2Id.value = state.id
+  level2Id.value = option.id
   level3Id.value = ''
   themeId.value = ''
 
   loadingChildren.value = true
   try {
-    const cities = await getCitiesByState(state.id)
-    level3Options.value = citiesToSelectOptions(cities)
+    const cities = await getTerritoryOptions('level3', option.id)
+    level3Options.value = territoryOptionsToSelectOptions(cities)
   } catch (error) {
     console.error(error)
     level3Options.value = []
@@ -179,11 +169,11 @@ watch(themeId, () => emitSelection())
           <p class="block-title">{{ ui.level1Title }}</p>
           <div class="chips-row">
             <HierarchyChipButton
-              v-for="(region, index) in regions"
-              :key="region.id"
-              :label="region.name"
+              v-for="(option, index) in level1Options"
+              :key="option.id"
+              :label="option.name"
               :active="selectedLevel1Index === index"
-              @click="selectLevel1(region, index)"
+              @click="selectLevel1(option, index)"
             />
           </div>
         </div>
@@ -193,11 +183,11 @@ watch(themeId, () => emitSelection())
           <p v-if="loadingChildren && !hasLevel2" class="status-msg">Updating options...</p>
           <div v-else class="chips-row">
             <HierarchyChipButton
-              v-for="(state, index) in level2Items"
-              :key="state.id"
-              :label="state.name"
+              v-for="(option, index) in level2Options"
+              :key="option.id"
+              :label="option.name"
               :active="selectedLevel2Index === index"
-              @click="selectLevel2(state, index)"
+              @click="selectLevel2(option, index)"
             />
           </div>
 

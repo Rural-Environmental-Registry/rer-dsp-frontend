@@ -1,13 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
 import SearchFilterComponent from '@/components/SearchFilterComponent.vue'
-import { getCitiesByState, getStates } from '@/services/locationService'
+import { getTerritoryOptions } from '@/services/territoryService'
 
-vi.mock('@/services/locationService', () => ({
-  getStates: vi.fn(),
-  getCitiesByState: vi.fn(),
-  getRegionsWithStates: vi.fn(),
-  getStatesByRegion: vi.fn(),
+vi.mock('@/services/territoryService', () => ({
+  getTerritoryOptions: vi.fn(),
 }))
 
 vi.mock('@fortawesome/vue-fontawesome', () => ({
@@ -20,20 +17,25 @@ vi.mock('@fortawesome/vue-fontawesome', () => ({
 describe('SearchFilterComponent', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    vi.mocked(getStates).mockResolvedValue([
-      { id: 'DF', name: 'Distrito Federal' },
-      { id: 'GO', name: 'Goiás' },
-    ])
-    vi.mocked(getCitiesByState).mockResolvedValue([
-      { id: 5300108, name: 'Brasília' },
-    ])
+    vi.mocked(getTerritoryOptions).mockImplementation(async (level, parentId) => {
+      if (level === 'level2' && !parentId) {
+        return [
+          { id: 'DF', name: 'DF - Distrito Federal' },
+          { id: 'GO', name: 'GO - Goiás' },
+        ]
+      }
+      if (level === 'level3' && parentId === 'DF') {
+        return [{ id: '5300108', name: 'Brasília' }]
+      }
+      return []
+    })
   })
 
-  it('should load level 2 options on mount', async () => {
+  it('should load root level options on mount', async () => {
     const wrapper = mount(SearchFilterComponent)
     await flushPromises()
 
-    expect(getStates).toHaveBeenCalledTimes(1)
+    expect(getTerritoryOptions).toHaveBeenCalledWith('level2')
     expect(wrapper.text()).toContain('Browse registered data')
   })
 
@@ -45,7 +47,7 @@ describe('SearchFilterComponent', () => {
     await selects[0].setValue('DF')
     await flushPromises()
 
-    expect(getCitiesByState).toHaveBeenCalledWith('DF')
+    expect(getTerritoryOptions).toHaveBeenCalledWith('level3', 'DF')
 
     const buttons = wrapper.findAll('button')
     const searchButton = buttons.find((button) => button.text().includes('Search'))

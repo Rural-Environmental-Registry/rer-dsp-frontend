@@ -1,4 +1,12 @@
-export type HierarchyLevelKey = 'level1' | 'level2' | 'level3'
+import type {
+  InstallationConfig,
+  InstallationScreenId,
+  ScreenConfig,
+} from '@/types/installationConfig'
+import type { HierarchyLevelKey } from '@/types/hierarchy'
+import { FALLBACK_INSTALLATION_CONFIG } from '@/config/installationConfigFallback'
+
+export type { HierarchyLevelKey }
 
 export interface SelectOption {
   value: string
@@ -30,32 +38,63 @@ export interface SearchFormConfig {
   theme?: ThemeFieldConfig
 }
 
-export const hierarchyFieldsByKey: Record<HierarchyLevelKey, HierarchyFieldConfig> = {
-  level1: { key: 'level1', label: 'Level 1', placeholder: 'Select level 1' },
-  level2: { key: 'level2', label: 'Level 2', placeholder: 'Select level 2' },
-  level3: { key: 'level3', label: 'Level 3', placeholder: 'Select level 3' },
+const LEVEL_KEYS: HierarchyLevelKey[] = ['level1', 'level2', 'level3']
+
+export function buildHierarchyFieldsByKey(
+  config: InstallationConfig = FALLBACK_INSTALLATION_CONFIG,
+): Record<HierarchyLevelKey, HierarchyFieldConfig> {
+  const byKey = {} as Record<HierarchyLevelKey, HierarchyFieldConfig>
+
+  for (const key of LEVEL_KEYS) {
+    const fromApi = config.hierarchy.find((level) => level.key === key)
+    byKey[key] = {
+      key,
+      label: fromApi?.label ?? key,
+      placeholder: fromApi?.placeholder ?? `Select ${key}`,
+    }
+  }
+
+  return byKey
 }
 
-export const homeSearchConfig: SearchFormConfig = {
-  title: 'Browse registered data',
-  hierarchyKeys: ['level2', 'level3'],
-  identifier: {
-    key: 'identifier',
-    label: 'Identifier',
-    placeholder: 'Enter the identifier',
-  },
+export function buildSearchFormConfig(
+  config: InstallationConfig,
+  screenId: InstallationScreenId,
+): SearchFormConfig {
+  const screen: ScreenConfig = config.screens[screenId]
+  return {
+    title: screen.title,
+    hierarchyKeys: [...screen.hierarchyKeys],
+    identifier: screen.identifier
+      ? {
+          key: screen.identifier.key,
+          label: screen.identifier.label,
+          placeholder: screen.identifier.placeholder,
+        }
+      : undefined,
+    theme: screen.theme
+      ? {
+          key: screen.theme.key,
+          label: screen.theme.label,
+          placeholder: screen.theme.placeholder,
+        }
+      : undefined,
+  }
 }
 
-export const downloadsSearchConfig: SearchFormConfig = {
-  title: 'Download public data',
-  hierarchyKeys: ['level1', 'level2', 'level3'],
-  theme: {
-    key: 'theme',
-    label: 'Theme',
-    placeholder: 'All themes',
-  },
+export function resolveHierarchyFields(
+  keys: HierarchyLevelKey[],
+  fieldsByKey: Record<HierarchyLevelKey, HierarchyFieldConfig> = buildHierarchyFieldsByKey(),
+): HierarchyFieldConfig[] {
+  return keys.map((key) => fieldsByKey[key])
 }
 
-export function resolveHierarchyFields(keys: HierarchyLevelKey[]): HierarchyFieldConfig[] {
-  return keys.map((key) => hierarchyFieldsByKey[key])
-}
+/** Fallbacks estáticos (testes / primeiro render antes da API). */
+export const hierarchyFieldsByKey = buildHierarchyFieldsByKey()
+
+export const homeSearchConfig = buildSearchFormConfig(FALLBACK_INSTALLATION_CONFIG, 'home')
+
+export const downloadsSearchConfig = buildSearchFormConfig(
+  FALLBACK_INSTALLATION_CONFIG,
+  'downloads',
+)

@@ -78,14 +78,16 @@ export const aboutUiConfig = {
         {
           title: 'Already configurable in this version',
           bullets: [
-            'Hierarchy labels (Level 1, Level 2, Level 3) and which levels appear on each screen.',
-            'Home KPIs (1 to 5 cards).',
+            'Hierarchy labels (Level 1, Level 2, Level 3) via GET /config/installation (mock today, database later).',
+            'Home always uses 2 levels; Downloads always uses 3 levels.',
+            'Territory options via GET /territory/options?level=&parentId=.',
+            'Home KPIs (up to 5 cards; first card is always registered properties) via installation config.',
             'Detail panel fields and labels for identifier search.',
             'Download themes and available file formats (catalog).',
           ],
         },
         {
-          note: 'Detailed adopter guides will be added as configuration options mature. For now, defaults live in the frontend/backend configuration modules.',
+          note: 'Detailed adopter guides will be added as configuration options mature. Installation labels currently come from the backend mock contract.',
         },
       ],
     },

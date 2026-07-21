@@ -4,25 +4,17 @@ import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { faSearch } from '@fortawesome/free-solid-svg-icons'
 import SelectInputComponent from '@/components/SelectInputComponent.vue'
 import TextInputComponent from '@/components/TextInputComponent.vue'
+import { territoryOptionsToSelectOptions } from '@/adapters/selectOptionAdapters'
 import {
-  citiesToSelectOptions,
-  regionsToSelectOptions,
-  statesToSelectOptions,
-} from '@/adapters/selectOptionAdapters'
-import {
+  hierarchyFieldsByKey,
   homeSearchConfig,
   resolveHierarchyFields,
+  type HierarchyFieldConfig,
   type HierarchyLevelKey,
   type SearchFormConfig,
   type SelectOption,
 } from '@/config/searchHierarchy'
-import {
-  getCitiesByState,
-  getRegionsWithStates,
-  getStates,
-  getStatesByRegion,
-} from '@/services/locationService'
-import type { RegionDTO } from '@/types/location'
+import { getTerritoryOptions } from '@/services/territoryService'
 
 export interface SearchFilterPayload {
   level1: string
@@ -35,10 +27,12 @@ export interface SearchFilterPayload {
 const props = withDefaults(
   defineProps<{
     config?: SearchFormConfig
+    hierarchyFields?: Record<HierarchyLevelKey, HierarchyFieldConfig>
     themeOptions?: SelectOption[]
   }>(),
   {
     config: () => homeSearchConfig,
+    hierarchyFields: () => hierarchyFieldsByKey,
     themeOptions: () => [],
   },
 )
@@ -64,9 +58,9 @@ const level1Options = ref<SelectOption[]>([])
 const level2Options = ref<SelectOption[]>([])
 const level3Options = ref<SelectOption[]>([])
 
-const regionsCache = ref<RegionDTO[]>([])
-
-const visibleFields = computed(() => resolveHierarchyFields(props.config.hierarchyKeys))
+const visibleFields = computed(() =>
+  resolveHierarchyFields(props.config.hierarchyKeys, props.hierarchyFields),
+)
 
 const optionsByLevel = computed<Record<HierarchyLevelKey, SelectOption[]>>(() => ({
   level1: level1Options.value,
@@ -80,6 +74,29 @@ function parentKey(key: HierarchyLevelKey): HierarchyLevelKey | null {
   return 'level2'
 }
 
+function nextKey(key: HierarchyLevelKey): HierarchyLevelKey | null {
+  if (key === 'level1') return 'level2'
+  if (key === 'level2') return 'level3'
+  return null
+}
+
+function setOptionsForLevel(level: HierarchyLevelKey, options: SelectOption[]): void {
+  if (level === 'level1') level1Options.value = options
+  else if (level === 'level2') level2Options.value = options
+  else level3Options.value = options
+}
+
+function clearDescendantOptions(level: HierarchyLevelKey): void {
+  if (level === 'level1') {
+    level2Options.value = []
+    level3Options.value = []
+    return
+  }
+  if (level === 'level2') {
+    level3Options.value = []
+  }
+}
+
 function isFieldDisabled(key: HierarchyLevelKey): boolean {
   const parent = parentKey(key)
   if (!parent) return false
@@ -87,28 +104,20 @@ function isFieldDisabled(key: HierarchyLevelKey): boolean {
   return !form[parent]
 }
 
-async function loadHomeRootOptions(): Promise<void> {
-  const states = await getStates()
-  level2Options.value = statesToSelectOptions(states)
-  level3Options.value = []
-}
-
-async function loadDownloadsRootOptions(): Promise<void> {
-  const regions = await getRegionsWithStates()
-  regionsCache.value = regions
-  level1Options.value = regionsToSelectOptions(regions)
-  level2Options.value = []
-  level3Options.value = []
-}
-
 async function loadRootOptions(): Promise<void> {
   loadingRoot.value = true
   loadError.value = ''
   try {
-    if (props.config.hierarchyKeys.includes('level1')) {
-      await loadDownloadsRootOptions()
-    } else {
-      await loadHomeRootOptions()
+    const rootLevel = props.config.hierarchyKeys[0]
+    if (!rootLevel) {
+      return
+    }
+
+    const options = await getTerritoryOptions(rootLevel)
+    setOptionsForLevel(rootLevel, territoryOptionsToSelectOptions(options))
+
+    for (const key of props.config.hierarchyKeys.slice(1)) {
+      setOptionsForLevel(key, [])
     }
   } catch (error) {
     console.error(error)
@@ -122,49 +131,26 @@ async function loadRootOptions(): Promise<void> {
   }
 }
 
-async function onLevel1Change(regionId: string): Promise<void> {
-  form.level2 = ''
-  form.level3 = ''
-  level3Options.value = []
+async function loadChildOptions(parentLevel: HierarchyLevelKey, parentId: string): Promise<void> {
+  const childLevel = nextKey(parentLevel)
+  if (!childLevel || !props.config.hierarchyKeys.includes(childLevel)) {
+    return
+  }
 
-  if (!regionId) {
-    level2Options.value = []
+  if (!parentId) {
+    setOptionsForLevel(childLevel, [])
+    clearDescendantOptions(childLevel)
     return
   }
 
   loadingChildren.value = true
   try {
-    const region = regionsCache.value.find((item) => String(item.id) === regionId)
-    if (region?.states?.length) {
-      level2Options.value = statesToSelectOptions(region.states)
-      return
-    }
-
-    const states = await getStatesByRegion(regionId)
-    level2Options.value = statesToSelectOptions(states)
+    const options = await getTerritoryOptions(childLevel, parentId)
+    setOptionsForLevel(childLevel, territoryOptionsToSelectOptions(options))
+    clearDescendantOptions(childLevel)
   } catch (error) {
     console.error(error)
-    level2Options.value = []
-  } finally {
-    loadingChildren.value = false
-  }
-}
-
-async function onLevel2Change(stateId: string): Promise<void> {
-  form.level3 = ''
-
-  if (!stateId) {
-    level3Options.value = []
-    return
-  }
-
-  loadingChildren.value = true
-  try {
-    const cities = await getCitiesByState(stateId)
-    level3Options.value = citiesToSelectOptions(cities)
-  } catch (error) {
-    console.error(error)
-    level3Options.value = []
+    setOptionsForLevel(childLevel, [])
   } finally {
     loadingChildren.value = false
   }
@@ -174,7 +160,9 @@ watch(
   () => form.level1,
   (value) => {
     if (props.config.hierarchyKeys.includes('level1')) {
-      void onLevel1Change(value)
+      form.level2 = ''
+      form.level3 = ''
+      void loadChildOptions('level1', value)
     }
   },
 )
@@ -183,8 +171,16 @@ watch(
   () => form.level2,
   (value) => {
     if (props.config.hierarchyKeys.includes('level3')) {
-      void onLevel2Change(value)
+      form.level3 = ''
+      void loadChildOptions('level2', value)
     }
+  },
+)
+
+watch(
+  () => props.config.hierarchyKeys.join(','),
+  () => {
+    void loadRootOptions()
   },
 )
 

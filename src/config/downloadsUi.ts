@@ -1,14 +1,33 @@
+import type { InstallationConfig } from '@/types/installationConfig'
+import { FALLBACK_INSTALLATION_CONFIG } from '@/config/installationConfigFallback'
+import { buildHierarchyFieldsByKey, buildSearchFormConfig } from '@/config/searchHierarchy'
+
 export const MAX_DOWNLOAD_LEVEL1 = 5
 
-export const downloadsUiConfig = {
+export interface DownloadsUiConfig {
+  bannerTitle: string
+  level1Title: string
+  level2Title: string
+  filterByTitle: string
+  level3Label: string
+  level3Placeholder: string
+  themeLabel: string
+  themePlaceholder: string
+  searchButton: string
+  clearButton: string
+  noResultsMessage: string
+  columns: {
+    topic: string
+    services: string
+    lastUpdate: string
+  }
+  emptyValue: string
+  formatLabels: Record<string, string>
+  statusTitles: Record<string, string>
+}
+
+const STATIC_DOWNLOADS_UI = {
   bannerTitle: 'Downloads',
-  level1Title: 'Select the level 1 you want to access for Downloads',
-  level2Title: 'Options for the selected level 1',
-  filterByTitle: 'Filter by:',
-  level3Label: 'Level 3',
-  level3Placeholder: 'Select level 3',
-  themeLabel: 'Theme',
-  themePlaceholder: 'All themes',
   searchButton: 'Search',
   clearButton: 'Clear',
   noResultsMessage: 'No themes found for the selected filter.',
@@ -27,6 +46,31 @@ export const downloadsUiConfig = {
     coming_soon: 'Coming soon',
   } as Record<string, string>,
 }
+
+export function resolveDownloadsUiConfig(
+  installation: InstallationConfig = FALLBACK_INSTALLATION_CONFIG,
+): DownloadsUiConfig {
+  const fields = buildHierarchyFieldsByKey(installation)
+  const screen = buildSearchFormConfig(installation, 'downloads')
+  const downloadsScreen = installation.screens.downloads
+
+  return {
+    ...STATIC_DOWNLOADS_UI,
+    level1Title:
+      downloadsScreen.level1SectionTitle ??
+      `Select the ${fields.level1.label} you want to access for Downloads`,
+    level2Title:
+      downloadsScreen.level2SectionTitle ??
+      `Options for the selected ${fields.level1.label}`,
+    filterByTitle: downloadsScreen.filterByTitle ?? 'Filter by:',
+    level3Label: fields.level3.label,
+    level3Placeholder: fields.level3.placeholder,
+    themeLabel: screen.theme?.label ?? 'Theme',
+    themePlaceholder: screen.theme?.placeholder ?? 'All themes',
+  }
+}
+
+export const downloadsUiConfig = resolveDownloadsUiConfig()
 
 export function formatDownloadLabel(format: string): string {
   return downloadsUiConfig.formatLabels[format] ?? format.toUpperCase()

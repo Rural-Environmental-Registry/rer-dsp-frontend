@@ -1,3 +1,10 @@
+import type { HomeKpisConfig, KpiCardConfig } from '@/types/installationConfig'
+import type { TotalizerDTO } from '@/types/totalizer'
+import {
+  FALLBACK_INSTALLATION_CONFIG,
+  PRIMARY_KPI_CODE,
+} from '@/config/installationConfigFallback'
+
 export const MIN_HOME_KPIS = 1
 export const MAX_HOME_KPIS = 5
 
@@ -11,52 +18,117 @@ export interface KpiItem {
   accentColor: string
 }
 
-export const DEFAULT_KPI_COLORS = ['#CED6E5', '#C1D2F2', '#98B7EC', '#97CCE3', '#B6C3D9']
-
-export const mockHomeKpis: KpiItem[] = [
+/** Valores mock usados quando a API de totalizers não responde. */
+export const mockTotalizerValues: TotalizerDTO[] = [
   {
-    id: 'kpi-1',
-    title: 'Total records',
+    code: PRIMARY_KPI_CODE,
+    name: 'Registered properties',
     value: 128450,
     unitOfMeasurement: 'un.',
-    accentColor: DEFAULT_KPI_COLORS[0],
+    subItemName: 'ha',
+    subItemValue: 2456789,
   },
   {
-    id: 'kpi-2',
-    title: 'Total area',
-    value: 2456789.5,
+    code: 'LEGAL_RESERVE',
+    name: 'Legal reserve',
+    value: 820100,
     unitOfMeasurement: 'ha',
-    optionalLabel: 'areas',
-    optionalValue: 98210,
-    accentColor: DEFAULT_KPI_COLORS[1],
   },
   {
-    id: 'kpi-3',
-    title: 'Published themes',
-    value: 42,
-    unitOfMeasurement: 'themes',
-    accentColor: DEFAULT_KPI_COLORS[2],
+    code: 'PERMANENT_PRESERVATION_AREA',
+    name: 'Permanent preservation area',
+    value: 310400,
+    unitOfMeasurement: 'ha',
   },
   {
-    id: 'kpi-4',
-    title: 'Official gazette publications',
-    value: 6000,
-    unitOfMeasurement: 'themes',
-    accentColor: DEFAULT_KPI_COLORS[3],
+    code: 'NATIVE_VEGETATION',
+    name: 'Native vegetation',
+    value: 1102300,
+    unitOfMeasurement: 'ha',
   },
   {
-    id: 'kpi-5',
-    title: 'Open communications',
-    value: 420,
-    unitOfMeasurement: 'themes',
-    accentColor: DEFAULT_KPI_COLORS[4],
+    code: 'CONSOLIDATED_AREA',
+    name: 'Consolidated area',
+    value: 990200,
+    unitOfMeasurement: 'ha',
   },
 ]
 
-export function resolveHomeKpis(kpis: KpiItem[]): KpiItem[] {
-  if (!kpis.length) {
+/**
+ * Monta os cards do painel a partir da config (rótulos/unidades) + valores dos totalizers.
+ * - Máximo de 5 cards
+ * - Primeiro card obrigatoriamente o primaryCode (imóveis cadastrados)
+ */
+export function resolveHomeKpis(
+  totalizers: TotalizerDTO[],
+  kpiConfig: HomeKpisConfig = FALLBACK_INSTALLATION_CONFIG.kpis,
+): KpiItem[] {
+  const maxCards = clampMaxCards(kpiConfig.maxCards)
+  const orderedCards = orderKpiCards(kpiConfig)
+
+  if (!orderedCards.length) {
     return []
   }
 
-  return kpis.slice(0, MAX_HOME_KPIS)
+  const valuesByCode = new Map(
+    totalizers
+      .filter((item) => item.code)
+      .map((item) => [item.code as string, item]),
+  )
+
+  return orderedCards.slice(0, maxCards).map((card) => toKpiItem(card, valuesByCode.get(card.code)))
 }
+
+function clampMaxCards(maxCards: number): number {
+  if (!Number.isFinite(maxCards) || maxCards < MIN_HOME_KPIS) {
+    return MAX_HOME_KPIS
+  }
+  return Math.min(Math.floor(maxCards), MAX_HOME_KPIS)
+}
+
+function orderKpiCards(kpiConfig: HomeKpisConfig): KpiCardConfig[] {
+  const primaryCode = kpiConfig.primaryCode || PRIMARY_KPI_CODE
+  const sorted = [...kpiConfig.cards].sort((a, b) => a.order - b.order)
+  const primary = sorted.find((card) => card.code === primaryCode)
+
+  if (!primary) {
+    console.warn(
+      `[homeKpis] Primary KPI "${primaryCode}" is missing from configuration. Panel will be empty.`,
+    )
+    return []
+  }
+
+  const others = sorted.filter((card) => card.code !== primaryCode)
+  return [primary, ...others]
+}
+
+function toKpiItem(card: KpiCardConfig, totalizer?: TotalizerDTO): KpiItem {
+  const optionalValue = resolveOptionalValue(totalizer)
+
+  return {
+    id: card.code,
+    title: card.label,
+    value: Number(totalizer?.value ?? 0),
+    unitOfMeasurement: card.unitOfMeasurement ?? undefined,
+    optionalLabel:
+      optionalValue === undefined
+        ? undefined
+        : (card.optionalLabel ?? totalizer?.subItemName ?? undefined) || undefined,
+    optionalValue,
+    accentColor: card.accentColor,
+  }
+}
+
+function resolveOptionalValue(totalizer?: TotalizerDTO): number | undefined {
+  if (!totalizer) {
+    return undefined
+  }
+  const raw = totalizer.subItemValue
+  if (raw === 0 || raw === '' || raw == null) {
+    return undefined
+  }
+  return Number(raw)
+}
+
+/** @deprecated Use resolveHomeKpis(mockTotalizerValues) — mantido para compatibilidade de imports. */
+export const mockHomeKpis = resolveHomeKpis(mockTotalizerValues)

@@ -13,11 +13,15 @@ vi.mock('@/services/totalizerService', () => ({
   getDetailsByIdentifier: vi.fn(),
 }))
 
-vi.mock('@/services/locationService', () => ({
-  getStates: vi.fn().mockResolvedValue([{ id: 'DF', name: 'Distrito Federal' }]),
-  getCitiesByState: vi.fn().mockResolvedValue([]),
-  getRegionsWithStates: vi.fn().mockResolvedValue([]),
-  getStatesByRegion: vi.fn().mockResolvedValue([]),
+vi.mock('@/services/configService', async () => {
+  const { FALLBACK_INSTALLATION_CONFIG } = await import('@/config/installationConfigFallback')
+  return {
+    getInstallationConfig: vi.fn().mockResolvedValue(FALLBACK_INSTALLATION_CONFIG),
+  }
+})
+
+vi.mock('@/services/territoryService', () => ({
+  getTerritoryOptions: vi.fn().mockResolvedValue([{ id: 'DF', name: 'DF - Distrito Federal' }]),
 }))
 
 vi.mock('@fortawesome/vue-fontawesome', () => ({

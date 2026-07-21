@@ -5,13 +5,27 @@ import SearchFilterComponent, {
 } from '@/components/SearchFilterComponent.vue'
 import DetailSearchComponent from '@/components/DetailSearchComponent.vue'
 import KpiCardComponent from '@/components/KpiCardComponent.vue'
-import { homeSearchConfig } from '@/config/searchHierarchy'
-import { mockHomeKpis, resolveHomeKpis, type KpiItem } from '@/config/homeKpis'
-import { totalizersToKpis } from '@/adapters/selectOptionAdapters'
+import {
+  buildHierarchyFieldsByKey,
+  buildSearchFormConfig,
+  hierarchyFieldsByKey,
+  homeSearchConfig,
+  type HierarchyFieldConfig,
+  type HierarchyLevelKey,
+  type SearchFormConfig,
+} from '@/config/searchHierarchy'
+import {
+  mockTotalizerValues,
+  resolveHomeKpis,
+  type KpiItem,
+} from '@/config/homeKpis'
+import { FALLBACK_INSTALLATION_CONFIG } from '@/config/installationConfigFallback'
+import { getInstallationConfig } from '@/services/configService'
 import {
   getDetailsByIdentifier,
   getTotalizersByStateOrCity,
 } from '@/services/totalizerService'
+import type { HomeKpisConfig } from '@/types/installationConfig'
 import type { DetailByIdentifierDTO } from '@/types/totalizer'
 import MoreContents from '@/components/MoreContents.vue'
 import { getMoreContentsCards } from '@/config/moreContentsUi'
@@ -21,22 +35,25 @@ const pageCards = getMoreContentsCards('home')
 const searching = ref(false)
 const searchError = ref('')
 const detailByIdentifier = ref<DetailByIdentifierDTO | null>(null)
-const kpis = ref<KpiItem[]>(resolveHomeKpis(mockHomeKpis))
+const kpiConfig = ref<HomeKpisConfig>(FALLBACK_INSTALLATION_CONFIG.kpis)
+const kpis = ref<KpiItem[]>(resolveHomeKpis(mockTotalizerValues, kpiConfig.value))
+const searchConfig = ref<SearchFormConfig>(homeSearchConfig)
+const hierarchyFields = ref<Record<HierarchyLevelKey, HierarchyFieldConfig>>(hierarchyFieldsByKey)
 
 async function loadTotalizers(stateId: string | null, cityIds: number[]): Promise<void> {
   const totalizers = await getTotalizersByStateOrCity({
     idState: stateId,
     idsCities: cityIds,
   })
-  kpis.value = resolveHomeKpis(totalizersToKpis(totalizers))
+  kpis.value = resolveHomeKpis(totalizers, kpiConfig.value)
 }
 
 async function loadInitialKpis(): Promise<void> {
   try {
     await loadTotalizers(null, [])
   } catch (error) {
-    console.warn('Initial KPIs from API unavailable — keeping mock.', error)
-    kpis.value = resolveHomeKpis(mockHomeKpis)
+    console.warn('Initial KPIs from API unavailable — keeping mock values.', error)
+    kpis.value = resolveHomeKpis(mockTotalizerValues, kpiConfig.value)
   }
 }
 
@@ -79,8 +96,16 @@ const onClear = () => {
   void loadInitialKpis()
 }
 
-onMounted(() => {
-  void loadInitialKpis()
+async function loadInstallationConfig(): Promise<void> {
+  const installation = await getInstallationConfig()
+  searchConfig.value = buildSearchFormConfig(installation, 'home')
+  hierarchyFields.value = buildHierarchyFieldsByKey(installation)
+  kpiConfig.value = installation.kpis
+}
+
+onMounted(async () => {
+  await loadInstallationConfig()
+  await loadInitialKpis()
 })
 </script>
 
@@ -98,7 +123,8 @@ onMounted(() => {
     <div class="main-page-container">
       <div class="content-general">
         <SearchFilterComponent
-          :config="homeSearchConfig"
+          :config="searchConfig"
+          :hierarchy-fields="hierarchyFields"
           @search="onSearch"
           @clear="onClear"
         />
