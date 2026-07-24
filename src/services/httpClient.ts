@@ -3,12 +3,9 @@ interface RuntimeEnv {
 }
 
 let cachedBaseUrl: string | null = null
+let resolveBaseUrlPromise: Promise<string> | null = null
 
-export async function resolveApiBaseUrl(): Promise<string> {
-  if (cachedBaseUrl) {
-    return cachedBaseUrl
-  }
-
+async function loadApiBaseUrl(): Promise<string> {
   const fromEnv = import.meta.env.VITE_DSP_API_URL
   if (fromEnv) {
     cachedBaseUrl = String(fromEnv).replace(/\/$/, '')
@@ -33,6 +30,22 @@ export async function resolveApiBaseUrl(): Promise<string> {
   throw new Error(
     'API URL is not configured. Set VITE_DSP_API_URL or public/config/env.json (urlBackend).',
   )
+}
+
+export async function resolveApiBaseUrl(): Promise<string> {
+  if (cachedBaseUrl) {
+    return cachedBaseUrl
+  }
+  if (resolveBaseUrlPromise) {
+    return resolveBaseUrlPromise
+  }
+
+  resolveBaseUrlPromise = loadApiBaseUrl().catch((error) => {
+    resolveBaseUrlPromise = null
+    throw error
+  })
+
+  return resolveBaseUrlPromise
 }
 
 async function buildUrl(path: string): Promise<string> {
@@ -85,4 +98,5 @@ export async function httpGetBlob(
 
 export function resetHttpClient(): void {
   cachedBaseUrl = null
+  resolveBaseUrlPromise = null
 }

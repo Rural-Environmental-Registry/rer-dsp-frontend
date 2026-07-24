@@ -32,6 +32,13 @@ vi.mock('@fortawesome/vue-fontawesome', () => ({
   },
 }))
 
+vi.mock('@/components/DspMapComponent.vue', () => ({
+  default: {
+    name: 'DspMapComponent',
+    template: '<div class="dsp-map-stub" />',
+  },
+}))
+
 describe('HomeView', () => {
   beforeEach(() => {
     vi.clearAllMocks()

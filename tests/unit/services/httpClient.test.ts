@@ -42,6 +42,45 @@ describe('httpClient', () => {
       const baseUrl = await resolveApiBaseUrl()
       expect(baseUrl).toBe('http://api.from-json/dsp-backend')
     })
+
+    it('should fetch env.json only once for parallel callers', async () => {
+      resetHttpClient()
+      vi.stubEnv('VITE_DSP_API_URL', '')
+
+      let resolveFetch!: (value: {
+        ok: boolean
+        json: () => Promise<{ urlBackend: string }>
+      }) => void
+      const fetchMock = vi.fn().mockImplementation(
+        () =>
+          new Promise((resolve) => {
+            resolveFetch = resolve
+          }),
+      )
+      vi.stubGlobal('fetch', fetchMock)
+
+      const pending = Promise.all([
+        resolveApiBaseUrl(),
+        resolveApiBaseUrl(),
+        resolveApiBaseUrl(),
+      ])
+
+      expect(fetchMock).toHaveBeenCalledTimes(1)
+      expect(fetchMock.mock.calls[0]?.[0]).toContain('config/env.json')
+
+      resolveFetch({
+        ok: true,
+        json: async () => ({ urlBackend: 'http://api.from-json/dsp-backend/' }),
+      })
+
+      const urls = await pending
+      expect(urls).toEqual([
+        'http://api.from-json/dsp-backend',
+        'http://api.from-json/dsp-backend',
+        'http://api.from-json/dsp-backend',
+      ])
+      expect(fetchMock).toHaveBeenCalledTimes(1)
+    })
   })
 
   describe('httpGet', () => {

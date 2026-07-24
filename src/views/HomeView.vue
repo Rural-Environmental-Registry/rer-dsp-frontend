@@ -27,6 +27,7 @@ import {
 } from '@/services/totalizerService'
 import type { HomeKpisConfig } from '@/types/installationConfig'
 import type { DetailByIdentifierDTO } from '@/types/totalizer'
+import DspMapComponent from '@/components/DspMapComponent.vue'
 import MoreContents from '@/components/MoreContents.vue'
 import { getMoreContentsCards } from '@/config/moreContentsUi'
 
@@ -131,6 +132,8 @@ onMounted(async () => {
 
         <p v-if="searching" class="status-msg">Searching...</p>
         <p v-else-if="searchError" class="status-msg status-msg--error">{{ searchError }}</p>
+
+        <DspMapComponent />
 
         <DetailSearchComponent
           v-if="detailByIdentifier"
