@@ -68,11 +68,11 @@ describe('httpClient', () => {
 
   describe('httpPost', () => {
     it('should post JSON body', async () => {
-      const body = { idState: 'DF', idsCities: [] }
-      await httpPost('totalizer/getTotalizerByStateOrCity', body)
+      const body = { level2Id: 'DF', level3Ids: [] }
+      await httpPost('totalizer/getTotalizers', body)
 
       expect(fetch).toHaveBeenCalledWith(
-        'http://localhost:8080/dsp-backend/totalizer/getTotalizerByStateOrCity',
+        'http://localhost:8080/dsp-backend/totalizer/getTotalizers',
         expect.objectContaining({
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },

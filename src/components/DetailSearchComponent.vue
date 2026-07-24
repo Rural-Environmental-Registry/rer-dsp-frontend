@@ -2,25 +2,34 @@
 import { computed } from 'vue'
 import type { DetailByIdentifierDTO } from '@/types/totalizer'
 import {
-  detailByIdentifierConfig,
+  buildDetailByIdentifierConfig,
   getDetailFieldsByGroup,
   getPropertyFieldRows,
+  readDetailFieldValue,
   type DetailFieldConfig,
 } from '@/config/detailByIdentifier'
+import { peekInstallationConfig } from '@/services/configService'
+import { formatDate } from '@/utils/dateFormat'
 import { formatPropertyMeasures } from '@/utils/format'
 
 const props = defineProps<{
   detail: DetailByIdentifierDTO
 }>()
 
-const config = detailByIdentifierConfig
-const headerFields = computed(() => getDetailFieldsByGroup('header'))
-const propertyRows = computed(() => getPropertyFieldRows())
+const installation = peekInstallationConfig()
+const config = buildDetailByIdentifierConfig(installation)
+const datePattern = installation.formats.date
+const headerFields = computed(() => getDetailFieldsByGroup('header', config))
+const propertyRows = computed(() => getPropertyFieldRows(config))
 
 function readFieldValue(field: DetailFieldConfig): string {
-  const raw = props.detail[field.key]
+  const raw = readDetailFieldValue(props.detail, field.key)
   if (raw === undefined || raw === null || raw === '') {
     return config.emptyValue
+  }
+
+  if (field.formatAsDate) {
+    return formatDate(String(raw), datePattern)
   }
 
   if (field.formatAsMeasure) {
@@ -42,7 +51,7 @@ function readFieldValue(field: DetailFieldConfig): string {
           v-for="field in headerFields"
           :key="field.key"
           class="field"
-          :class="{ 'field--wide': field.key === 'codeProperty' }"
+          :class="{ 'field--wide': field.key === 'id' }"
         >
           <p>{{ field.label }}</p>
           <strong>{{ readFieldValue(field) }}</strong>

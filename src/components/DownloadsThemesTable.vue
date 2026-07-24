@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { downloadsUiConfig, formatDownloadLabel } from '@/config/downloadsUi'
+import { peekInstallationConfig } from '@/services/configService'
 import type { DownloadAvailabilityStatus, DownloadItemDTO } from '@/types/download'
+import { formatDate, formatDateTime } from '@/utils/dateFormat'
 
 const props = defineProps<{
   items: DownloadItemDTO[]
@@ -12,6 +14,7 @@ const emit = defineEmits<{
 }>()
 
 const ui = downloadsUiConfig
+const formats = peekInstallationConfig().formats
 
 function buttonKey(themeCode: string, format: string): string {
   return `${themeCode}:${format}`
@@ -27,11 +30,10 @@ function statusTitle(status: DownloadAvailabilityStatus): string {
 
 function formatLastUpdate(value: string | null): string {
   if (!value) return ui.emptyValue
-  const isoMatch = /^(\d{4})-(\d{2})-(\d{2})/.exec(value)
-  if (isoMatch) {
-    return `${isoMatch[2]}/${isoMatch[3]}/${isoMatch[1]}`
+  if (value.includes('T') || /\d{2}:\d{2}/.test(value)) {
+    return formatDateTime(value, formats.dateTime)
   }
-  return value
+  return formatDate(value, formats.date)
 }
 </script>
 

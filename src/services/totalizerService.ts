@@ -5,11 +5,11 @@ import type {
   TotalizerFilterDTO,
 } from '@/types/totalizer'
 
-export async function getTotalizersByStateOrCity(
+export async function getTotalizers(
   filter: TotalizerFilterDTO,
 ): Promise<TotalizerDTO[]> {
   const data = await httpPost<TotalizerDTO[]>(
-    'totalizer/getTotalizerByStateOrCity',
+    'totalizer/getTotalizers',
     filter,
   )
   return data ?? []

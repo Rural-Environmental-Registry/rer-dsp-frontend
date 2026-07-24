@@ -1,6 +1,6 @@
 import type { InstallationConfig } from '@/types/installationConfig'
 
-export const PRIMARY_KPI_CODE = 'REGISTERED_AREA'
+export const PRIMARY_KPI_CODE = 'AREA_OF_INTEREST'
 
 /**
  * Fallback local quando a API de config ainda não está disponível.
@@ -20,6 +20,16 @@ export const FALLBACK_INSTALLATION_CONFIG: InstallationConfig = {
         key: 'identifier',
         label: 'Identifier',
         placeholder: 'Enter the identifier',
+      },
+      detail: {
+        sectionTitle: 'Search details',
+        propertySectionTitle: 'Record data',
+        registrationDateLabel: 'Registration date',
+        alterationDateLabel: 'Alteration date',
+        latitudeLabel: 'Latitude',
+        longitudeLabel: 'Longitude',
+        areaLabel: 'Area',
+        featuresDownloadLabel: 'Download features',
       },
     },
     downloads: {
@@ -81,5 +91,13 @@ export const FALLBACK_INSTALLATION_CONFIG: InstallationConfig = {
         required: false,
       },
     ],
+  },
+  areaOfInterest: {
+    areaUnit: 'ha',
+    areaUnitLabel: 'ha',
+  },
+  formats: {
+    date: 'dd/MM/yyyy',
+    dateTime: 'dd/MM/yyyy HH:mm:ss',
   },
 }

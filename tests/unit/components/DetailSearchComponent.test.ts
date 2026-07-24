@@ -1,51 +1,98 @@
-import { describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
 import DetailSearchComponent from '@/components/DetailSearchComponent.vue'
 import type { DetailByIdentifierDTO } from '@/types/totalizer'
-import { detailByIdentifierConfig } from '@/config/detailByIdentifier'
-import { hierarchyFieldsByKey, homeSearchConfig } from '@/config/searchHierarchy'
+import { FALLBACK_INSTALLATION_CONFIG } from '@/config/installationConfigFallback'
+import { peekInstallationConfig, resetInstallationConfigCache } from '@/services/configService'
+import type { InstallationConfig } from '@/types/installationConfig'
+
+vi.mock('@/services/configService', async () => {
+  const actual = await vi.importActual<typeof import('@/services/configService')>(
+    '@/services/configService',
+  )
+  return {
+    ...actual,
+    peekInstallationConfig: vi.fn(),
+  }
+})
+
+const ptbrInstallation: InstallationConfig = {
+  ...FALLBACK_INSTALLATION_CONFIG,
+  hierarchy: [
+    { key: 'level1', label: 'Região', placeholder: 'Selecione uma região', order: 1 },
+    { key: 'level2', label: 'Estado', placeholder: 'Selecione um estado', order: 2 },
+    { key: 'level3', label: 'Município', placeholder: 'Selecione um município', order: 3 },
+  ],
+  screens: {
+    ...FALLBACK_INSTALLATION_CONFIG.screens,
+    home: {
+      ...FALLBACK_INSTALLATION_CONFIG.screens.home,
+      identifier: {
+        key: 'identifier',
+        label: 'Identificador',
+        placeholder: 'Informe o identificador',
+      },
+      detail: {
+        sectionTitle: 'Detalhes da consulta',
+        propertySectionTitle: 'Dados do registro',
+        registrationDateLabel: 'Data de registro',
+        alterationDateLabel: 'Data de alteração',
+        latitudeLabel: 'Latitude',
+        longitudeLabel: 'Longitude',
+        areaLabel: 'Área',
+        featuresDownloadLabel: 'Baixar feições',
+      },
+    },
+  },
+}
 
 const detail: DetailByIdentifierDTO = {
-  codeProperty: 'DF123456789012',
-  createdAt: '10/01/2020',
-  nameCity: 'Brasília',
-  nameState: 'Distrito Federal',
+  id: 'DF123456789012',
+  registrationDate: '2020-01-10',
+  territory: {
+    level2: { id: 'DF', name: 'Distrito Federal' },
+    level3: { id: '5300108', name: 'Brasília' },
+  },
   latitude: '-15.793889',
   longitude: '-47.882778',
-  geographicCoordinatesOfCentroid: '-15.793889, -47.882778',
-  haRegisteredArea: 120.5,
-  fiscalModules: 2.5,
-  lastRectification: '15/06/2024',
+  area: 120.5,
+  alterationDate: '2024-06-15',
 }
 
 describe('DetailSearchComponent', () => {
+  beforeEach(() => {
+    vi.mocked(peekInstallationConfig).mockReturnValue(ptbrInstallation)
+  })
+
+  afterEach(() => {
+    resetInstallationConfigCache()
+    vi.clearAllMocks()
+  })
+
   it('should render section titles and main values from config', () => {
     const wrapper = mount(DetailSearchComponent, {
       props: { detail },
     })
 
-    expect(wrapper.text()).toContain(detailByIdentifierConfig.sectionTitle)
-    expect(wrapper.text()).toContain(detailByIdentifierConfig.propertySectionTitle)
+    expect(wrapper.text()).toContain('Detalhes da consulta')
+    expect(wrapper.text()).toContain('Dados do registro')
     expect(wrapper.text()).toContain('DF123456789012')
     expect(wrapper.text()).toContain('Brasília')
     expect(wrapper.text()).toContain('Distrito Federal')
     expect(wrapper.text()).toContain('120.50 ha')
   })
 
-  it('should use the same generic labels as the home search filters', () => {
+  it('should use installation labels for identifier and hierarchy', () => {
     const wrapper = mount(DetailSearchComponent, {
       props: { detail },
     })
 
-    expect(wrapper.text()).toContain(homeSearchConfig.identifier?.label)
-    expect(wrapper.text()).toContain(hierarchyFieldsByKey.level2.label)
-    expect(wrapper.text()).toContain(hierarchyFieldsByKey.level3.label)
-    expect(wrapper.text()).toContain('Level 2')
-    expect(wrapper.text()).toContain('Level 3')
-    expect(wrapper.text()).toContain('Identifier')
-    expect(wrapper.text()).not.toContain('UF')
-    expect(wrapper.text()).not.toContain('Municipality')
-    expect(wrapper.text()).not.toContain('Nº do CAR')
+    expect(wrapper.text()).toContain('Identificador')
+    expect(wrapper.text()).toContain('Estado')
+    expect(wrapper.text()).toContain('Município')
+    expect(wrapper.text()).not.toContain('Level 2')
+    expect(wrapper.text()).not.toContain('Level 3')
+    expect(wrapper.text()).not.toContain('Identifier')
   })
 
   it('should show alteration date and hide centroid and fiscal modules', () => {
@@ -53,12 +100,12 @@ describe('DetailSearchComponent', () => {
       props: { detail },
     })
 
-    expect(wrapper.text()).toContain('Alteration date')
+    expect(wrapper.text()).toContain('Data de alteração')
+    expect(wrapper.text()).toContain('Data de registro')
     expect(wrapper.text()).toContain('15/06/2024')
+    expect(wrapper.text()).toContain('10/01/2020')
     expect(wrapper.text()).not.toContain('Centroid coordinates')
     expect(wrapper.text()).not.toContain('Reference modules')
-    expect(wrapper.text()).not.toContain('-15.793889, -47.882778')
-    expect(wrapper.text()).not.toContain('2.50')
   })
 
   it('should render property fields in separate rows', () => {
@@ -68,11 +115,11 @@ describe('DetailSearchComponent', () => {
 
     const rows = wrapper.findAll('.property-row')
     expect(rows).toHaveLength(3)
-    expect(rows[0].text()).toContain('Level 3')
-    expect(rows[0].text()).toContain('Level 2')
+    expect(rows[0].text()).toContain('Município')
+    expect(rows[0].text()).toContain('Estado')
     expect(rows[1].text()).toContain('Latitude')
     expect(rows[1].text()).toContain('Longitude')
-    expect(rows[2].text()).toContain('Area')
+    expect(rows[2].text()).toContain('Área')
   })
 
   it('should render features download button disabled', () => {
@@ -82,7 +129,7 @@ describe('DetailSearchComponent', () => {
 
     const button = wrapper.find('button')
     expect(button.exists()).toBe(true)
-    expect(button.text()).toContain(detailByIdentifierConfig.featuresDownload.label)
+    expect(button.text()).toContain('Baixar feições')
     expect(button.attributes('disabled')).toBeDefined()
   })
 })

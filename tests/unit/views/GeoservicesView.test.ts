@@ -42,6 +42,7 @@ vi.mock('@/services/configService', async () => {
   const { FALLBACK_INSTALLATION_CONFIG } = await import('@/config/installationConfigFallback')
   return {
     getInstallationConfig: vi.fn().mockResolvedValue(FALLBACK_INSTALLATION_CONFIG),
+    peekInstallationConfig: vi.fn().mockReturnValue(FALLBACK_INSTALLATION_CONFIG),
   }
 })
 
@@ -95,7 +96,7 @@ describe('GeoservicesView', () => {
     expect(wrapper.text()).toContain('Theme Alpha')
     expect(wrapper.text()).toContain('CSV')
     expect(wrapper.text()).not.toContain('GPKG')
-    expect(wrapper.text()).toContain('06/01/2026')
+    expect(wrapper.text()).toContain('01/06/2026')
   })
 
   it('should download available CSV format', async () => {

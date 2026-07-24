@@ -8,22 +8,26 @@ export interface TotalizerDTO {
 }
 
 export interface TotalizerFilterDTO {
-  idState: string | null
-  idsCities: number[]
+  level2Id: string | null
+  level3Ids: string[]
+}
+
+export interface TerritoryLevelRefDTO {
+  id?: string
+  name?: string
+}
+
+export interface TerritoryLevelsDTO {
+  level2?: TerritoryLevelRefDTO | null
+  level3?: TerritoryLevelRefDTO | null
 }
 
 export interface DetailByIdentifierDTO {
-  codeProperty?: string
+  id?: string
   latitude?: string
   longitude?: string
-  geographicCoordinatesOfCentroid?: string
-  idState?: string
-  nameState?: string
-  nameCity?: string
-  fiscalModules?: number
-  createdAt?: string
-  lastRectification?: string
-  haRegisteredArea?: number
-  idOrigin?: number
-  bounderBox?: string
+  territory?: TerritoryLevelsDTO | null
+  registrationDate?: string
+  alterationDate?: string
+  area?: number
 }

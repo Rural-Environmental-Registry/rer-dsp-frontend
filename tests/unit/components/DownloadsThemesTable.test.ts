@@ -22,7 +22,7 @@ describe('DownloadsThemesTable', () => {
     expect(wrapper.text()).toContain('Services')
     expect(wrapper.text()).toContain('Last update')
     expect(wrapper.text()).toContain('Theme Alpha')
-    expect(wrapper.text()).toContain('06/01/2026')
+    expect(wrapper.text()).toContain('01/06/2026')
     expect(wrapper.text()).toContain('CSV')
     expect(wrapper.text()).not.toContain('GPKG')
 

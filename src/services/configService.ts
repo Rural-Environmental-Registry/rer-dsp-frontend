@@ -22,3 +22,7 @@ export async function getInstallationConfig(): Promise<InstallationConfig> {
 export function resetInstallationConfigCache(): void {
   cachedConfig = null
 }
+
+export function peekInstallationConfig(): InstallationConfig {
+  return cachedConfig ?? FALLBACK_INSTALLATION_CONFIG
+}

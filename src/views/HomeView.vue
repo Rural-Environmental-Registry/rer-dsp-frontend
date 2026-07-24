@@ -23,7 +23,7 @@ import { FALLBACK_INSTALLATION_CONFIG } from '@/config/installationConfigFallbac
 import { getInstallationConfig } from '@/services/configService'
 import {
   getDetailsByIdentifier,
-  getTotalizersByStateOrCity,
+  getTotalizers,
 } from '@/services/totalizerService'
 import type { HomeKpisConfig } from '@/types/installationConfig'
 import type { DetailByIdentifierDTO } from '@/types/totalizer'
@@ -40,10 +40,10 @@ const kpis = ref<KpiItem[]>(resolveHomeKpis(mockTotalizerValues, kpiConfig.value
 const searchConfig = ref<SearchFormConfig>(homeSearchConfig)
 const hierarchyFields = ref<Record<HierarchyLevelKey, HierarchyFieldConfig>>(hierarchyFieldsByKey)
 
-async function loadTotalizers(stateId: string | null, cityIds: number[]): Promise<void> {
-  const totalizers = await getTotalizersByStateOrCity({
-    idState: stateId,
-    idsCities: cityIds,
+async function loadTotalizers(level2Id: string | null, level3Ids: string[]): Promise<void> {
+  const totalizers = await getTotalizers({
+    level2Id,
+    level3Ids,
   })
   kpis.value = resolveHomeKpis(totalizers, kpiConfig.value)
 }
@@ -80,8 +80,8 @@ const onSearch = async (payload: SearchFilterPayload) => {
       return
     }
 
-    const cityIds = payload.level3 ? [Number(payload.level3)] : []
-    await loadTotalizers(payload.level2, cityIds)
+    const level3Ids = payload.level3 ? [String(payload.level3)] : []
+    await loadTotalizers(payload.level2, level3Ids)
   } catch (error) {
     console.error(error)
     searchError.value = 'Search failed. Check the API (config/env.json).'

@@ -35,6 +35,7 @@ describe('configService', () => {
     expect(result.screens.downloads.hierarchyKeys).toEqual(['level1', 'level2', 'level3'])
     expect(result.kpis.maxCards).toBe(5)
     expect(result.kpis.cards[0].code).toBe(FALLBACK_INSTALLATION_CONFIG.kpis.primaryCode)
+    expect(result.areaOfInterest.areaUnit).toBe('ha')
   })
 
   it('should cache installation config', async () => {
@@ -52,5 +53,6 @@ describe('configService', () => {
     const result = await getInstallationConfig()
 
     expect(result).toEqual(FALLBACK_INSTALLATION_CONFIG)
+    expect(result.areaOfInterest).toEqual({ areaUnit: 'ha', areaUnitLabel: 'ha' })
   })
 })

@@ -5,11 +5,11 @@ import HomeView from '@/views/HomeView.vue'
 import SearchFilterComponent from '@/components/SearchFilterComponent.vue'
 import {
   getDetailsByIdentifier,
-  getTotalizersByStateOrCity,
+  getTotalizers,
 } from '@/services/totalizerService'
 
 vi.mock('@/services/totalizerService', () => ({
-  getTotalizersByStateOrCity: vi.fn(),
+  getTotalizers: vi.fn(),
   getDetailsByIdentifier: vi.fn(),
 }))
 
@@ -17,6 +17,7 @@ vi.mock('@/services/configService', async () => {
   const { FALLBACK_INSTALLATION_CONFIG } = await import('@/config/installationConfigFallback')
   return {
     getInstallationConfig: vi.fn().mockResolvedValue(FALLBACK_INSTALLATION_CONFIG),
+    peekInstallationConfig: vi.fn().mockReturnValue(FALLBACK_INSTALLATION_CONFIG),
   }
 })
 
@@ -34,10 +35,10 @@ vi.mock('@fortawesome/vue-fontawesome', () => ({
 describe('HomeView', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    vi.mocked(getTotalizersByStateOrCity).mockResolvedValue([
+    vi.mocked(getTotalizers).mockResolvedValue([
       {
         name: 'Registered properties',
-        code: 'REGISTERED_AREA',
+        code: 'AREA_OF_INTEREST',
         value: 100,
         unitOfMeasurement: 'un.',
       },
@@ -47,15 +48,16 @@ describe('HomeView', () => {
 
   it('should render detail panel when identifier search succeeds', async () => {
     vi.mocked(getDetailsByIdentifier).mockResolvedValue({
-      codeProperty: 'DF123456789012',
-      createdAt: '10/01/2020',
-      nameCity: 'Brasília',
-      nameState: 'Distrito Federal',
+      id: 'DF123456789012',
+      registrationDate: '2020-01-10',
+      territory: {
+        level2: { id: 'DF', name: 'Distrito Federal' },
+        level3: { id: '5300108', name: 'Brasília' },
+      },
       latitude: '-15.793889',
       longitude: '-47.882778',
-      geographicCoordinatesOfCentroid: '-15.793889, -47.882778',
-      haRegisteredArea: 120.5,
-      fiscalModules: 2.5,
+      area: 120.5,
+      alterationDate: '2024-06-15',
     })
 
     const router = createRouter({
@@ -112,7 +114,7 @@ describe('HomeView', () => {
 
     expect(wrapper.exists()).toBe(true)
     expect(wrapper.text()).toContain('Data Sharing Platform')
-    expect(getTotalizersByStateOrCity).toHaveBeenCalled()
+    expect(getTotalizers).toHaveBeenCalled()
     expect(wrapper.text()).toContain('Registered properties')
   })
 })

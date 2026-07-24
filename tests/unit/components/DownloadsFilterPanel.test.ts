@@ -6,9 +6,13 @@ import { getTerritoryOptions } from '@/services/territoryService'
 import { FALLBACK_INSTALLATION_CONFIG } from '@/config/installationConfigFallback'
 import { MAX_DOWNLOAD_LEVEL1 } from '@/config/downloadsUi'
 
-vi.mock('@/services/configService', () => ({
-  getInstallationConfig: vi.fn(),
-}))
+vi.mock('@/services/configService', async () => {
+  const { FALLBACK_INSTALLATION_CONFIG } = await import('@/config/installationConfigFallback')
+  return {
+    getInstallationConfig: vi.fn(),
+    peekInstallationConfig: vi.fn().mockReturnValue(FALLBACK_INSTALLATION_CONFIG),
+  }
+})
 
 vi.mock('@/services/territoryService', () => ({
   getTerritoryOptions: vi.fn(),

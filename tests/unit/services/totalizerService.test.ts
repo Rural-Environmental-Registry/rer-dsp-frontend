@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { httpGet, httpPost } from '@/services/httpClient'
 import {
   getDetailsByIdentifier,
-  getTotalizersByStateOrCity,
+  getTotalizers,
 } from '@/services/totalizerService'
 
 vi.mock('@/services/httpClient')
@@ -16,29 +16,29 @@ describe('totalizerService', () => {
     vi.restoreAllMocks()
   })
 
-  describe('getTotalizersByStateOrCity', () => {
+  describe('getTotalizers', () => {
     it('should post filter and return totalizers', async () => {
-      const filter = { idState: 'DF', idsCities: [5300108] }
+      const filter = { level2Id: 'DF', level3Ids: ['5300108'] }
       const mockData = [{ name: 'Properties', value: 10 }]
       vi.mocked(httpPost).mockResolvedValue(mockData)
 
-      const result = await getTotalizersByStateOrCity(filter)
+      const result = await getTotalizers(filter)
 
-      expect(httpPost).toHaveBeenCalledWith('totalizer/getTotalizerByStateOrCity', filter)
+      expect(httpPost).toHaveBeenCalledWith('totalizer/getTotalizers', filter)
       expect(result).toEqual(mockData)
     })
 
     it('should return empty array when API returns null', async () => {
       vi.mocked(httpPost).mockResolvedValue(null as unknown as [])
       await expect(
-        getTotalizersByStateOrCity({ idState: null, idsCities: [] }),
+        getTotalizers({ level2Id: null, level3Ids: [] }),
       ).resolves.toEqual([])
     })
   })
 
   describe('getDetailsByIdentifier', () => {
     it('should fetch detail by identifier', async () => {
-      const detail = { codeProperty: 'DF123456789012', nameState: 'Distrito Federal' }
+      const detail = { id: 'DF123456789012', territory: { level2: { name: 'Distrito Federal' } } }
       vi.mocked(httpGet).mockResolvedValue(detail)
 
       const result = await getDetailsByIdentifier('DF123456789012')

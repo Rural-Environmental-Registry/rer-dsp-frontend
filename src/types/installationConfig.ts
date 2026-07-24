@@ -13,6 +13,17 @@ export interface ScreenFieldConfig {
   placeholder: string
 }
 
+export interface HomeDetailSearchConfig {
+  sectionTitle: string
+  propertySectionTitle: string
+  registrationDateLabel: string
+  alterationDateLabel: string
+  latitudeLabel: string
+  longitudeLabel: string
+  areaLabel: string
+  featuresDownloadLabel: string
+}
+
 export interface ScreenConfig {
   title: string
   hierarchyKeys: HierarchyLevelKey[]
@@ -21,6 +32,7 @@ export interface ScreenConfig {
   level1SectionTitle?: string | null
   level2SectionTitle?: string | null
   filterByTitle?: string | null
+  detail?: HomeDetailSearchConfig | null
 }
 
 export interface ScreensConfig {
@@ -40,15 +52,29 @@ export interface KpiCardConfig {
 
 export interface HomeKpisConfig {
   maxCards: number
-  /** Código do card principal obrigatório (ex.: REGISTERED_AREA / imóveis cadastrados). */
+  /** Código do card principal obrigatório (ex.: AREA_OF_INTEREST / imóveis cadastrados). */
   primaryCode: string
   cards: KpiCardConfig[]
+}
+
+export interface AreaOfInterestMeasuresConfig {
+  areaUnit: string
+  areaUnitLabel: string
+}
+
+export interface FormatsConfig {
+  /** yyyy-MM-dd */
+  date: string
+  /** yyyy-MM-dd'T'HH:mm:ss */
+  dateTime: string
 }
 
 export interface InstallationConfig {
   hierarchy: HierarchyLevelConfig[]
   screens: ScreensConfig
   kpis: HomeKpisConfig
+  areaOfInterest: AreaOfInterestMeasuresConfig
+  formats: FormatsConfig
 }
 
 export type InstallationScreenId = keyof ScreensConfig
