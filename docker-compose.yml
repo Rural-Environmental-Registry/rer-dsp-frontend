@@ -1,0 +1,21 @@
+services:
+
+  dsp-frontend:
+    image: dsp-frontend:latest
+    build:
+      dockerfile: Dockerfile
+      context: .
+      args:
+        - APP_VERSION=0.0.0
+        - VITE_BASE_URL=/dsp/
+        - VITE_DSP_API_URL=/dsp-backend
+    container_name: dsp-frontend
+    restart: unless-stopped
+    ports:
+      - "8081:8080"
+    networks:
+      - dsp_network
+
+networks:
+  dsp_network:
+    name: dsp_network
