@@ -18,7 +18,7 @@ export interface KpiItem {
   accentColor: string
 }
 
-/** Valores mock usados quando a API de totalizers não responde. */
+/** Mock values used when the totalizers API does not respond. */
 export const mockTotalizerValues: TotalizerDTO[] = [
   {
     code: PRIMARY_KPI_CODE,
@@ -55,9 +55,9 @@ export const mockTotalizerValues: TotalizerDTO[] = [
 ]
 
 /**
- * Monta os cards do painel a partir da config (rótulos/unidades) + valores dos totalizers.
- * - Máximo de 5 cards
- * - Primeiro card obrigatoriamente o primaryCode (imóveis cadastrados)
+ * Builds dashboard cards from config (labels/units) + totalizer values.
+ * - Up to 5 cards
+ * - First card must be the primaryCode (registered properties)
  */
 export function resolveHomeKpis(
   totalizers: TotalizerDTO[],
@@ -130,5 +130,5 @@ function resolveOptionalValue(totalizer?: TotalizerDTO): number | undefined {
   return Number(raw)
 }
 
-/** @deprecated Use resolveHomeKpis(mockTotalizerValues) — mantido para compatibilidade de imports. */
+/** @deprecated Use resolveHomeKpis(mockTotalizerValues) — kept for import compatibility. */
 export const mockHomeKpis = resolveHomeKpis(mockTotalizerValues)

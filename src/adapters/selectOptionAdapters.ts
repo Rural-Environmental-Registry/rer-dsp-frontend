@@ -35,7 +35,7 @@ export function territoryOptionsToSelectOptions(options: TerritoryOption[]): Sel
   }))
 }
 
-/** Combina totalizers (valores) com a config de KPIs (rótulos/unidades/limites). */
+/** Combines totalizers (values) with KPI config (labels/units/limits). */
 export function totalizersToKpis(
   totalizers: TotalizerDTO[],
   kpiConfig: HomeKpisConfig = FALLBACK_INSTALLATION_CONFIG.kpis,

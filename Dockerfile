@@ -23,7 +23,7 @@ ARG VITE_DSP_API_URL=/dsp-backend
 ENV APP_VERSION=$APP_VERSION
 ENV VITE_BASE_URL=$VITE_BASE_URL
 ENV VITE_DSP_API_URL=$VITE_DSP_API_URL
-# Garante que o env.json do artefato use a URL do build (não localhost de dev)
+# Ensure the artifact env.json uses the build URL (not local-dev localhost)
 RUN mkdir -p public/config \
     && printf '{"urlBackend":"%s"}\n' "$VITE_DSP_API_URL" > public/config/env.json
 RUN npm run build-only

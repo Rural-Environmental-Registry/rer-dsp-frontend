@@ -89,7 +89,7 @@ export function resolveHierarchyFields(
   return keys.map((key) => fieldsByKey[key])
 }
 
-/** Fallbacks estáticos (testes / primeiro render antes da API). */
+/** Static fallbacks (tests / first render before the API). */
 export const hierarchyFieldsByKey = buildHierarchyFieldsByKey()
 
 export const homeSearchConfig = buildSearchFormConfig(FALLBACK_INSTALLATION_CONFIG, 'home')

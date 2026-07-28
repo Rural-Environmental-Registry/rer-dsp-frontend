@@ -52,7 +52,7 @@ export interface KpiCardConfig {
 
 export interface HomeKpisConfig {
   maxCards: number
-  /** Código do card principal obrigatório (ex.: AREA_OF_INTEREST / imóveis cadastrados). */
+  /** Required primary card code (e.g. AREA_OF_INTEREST / registered properties). */
   primaryCode: string
   cards: KpiCardConfig[]
 }

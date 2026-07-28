@@ -3,8 +3,8 @@ import type { InstallationConfig } from '@/types/installationConfig'
 export const PRIMARY_KPI_CODE = 'AREA_OF_INTEREST'
 
 /**
- * Fallback local quando a API de config ainda não está disponível.
- * Mantém Home com 2 níveis e Downloads com 3.
+ * Local fallback when the config API is not available yet.
+ * Keeps Home with 2 levels and Downloads with 3.
  */
 export const FALLBACK_INSTALLATION_CONFIG: InstallationConfig = {
   hierarchy: [
