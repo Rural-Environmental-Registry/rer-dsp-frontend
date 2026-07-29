@@ -44,8 +44,8 @@ describe('homeKpis', () => {
         primaryCode: PRIMARY_KPI_CODE,
         cards: [
           {
-            code: 'LEGAL_RESERVE',
-            label: 'Legal reserve',
+            code: 'THEME_1',
+            label: 'Theme 1',
             unitOfMeasurement: 'ha',
             accentColor: '#C1D2F2',
             order: 1,
@@ -65,7 +65,7 @@ describe('homeKpis', () => {
       const result = resolveHomeKpis(mockTotalizerValues, config)
 
       expect(result[0].id).toBe(PRIMARY_KPI_CODE)
-      expect(result[1].id).toBe('LEGAL_RESERVE')
+      expect(result[1].id).toBe('THEME_1')
     })
 
     it('should truncate when there are more than 5 configured cards', () => {
