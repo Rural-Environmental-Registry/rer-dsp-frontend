@@ -42,7 +42,7 @@ import MoreContents from '@/components/MoreContents.vue'
 import { getMoreContentsCards } from '@/config/moreContentsUi'
 
 const pageCards = getMoreContentsCards('home')
-
+const logoRerSrc = `${import.meta.env.BASE_URL}images/Logo-RER.png`
 const AOI_HIGHLIGHT_DARKEN_BORDER = 0.75
 const AOI_HIGHLIGHT_DARKEN_FILL = 0.6
 
@@ -327,9 +327,17 @@ onMounted(async () => {
 <template>
   <div class="main-container">
     <div class="banner-container">
+      <div class="br-map">
+        <img
+          :src="logoRerSrc"
+          alt="Logo RER"
+          width="1390"
+          height="540"
+        />
+      </div>
       <div class="banner-content">
         <h1>
-          <strong class="project-name"> Data Sharing Platform (DSP)</strong>
+          <strong class="project-name"> Data Sharing Platform</strong>
         </h1>
         <h2>Public geospatial consultation portal</h2>
       </div>
@@ -348,7 +356,7 @@ onMounted(async () => {
         <p v-if="searching" class="status-msg">Searching...</p>
         <p v-else-if="searchError" class="status-msg status-msg--error">{{ searchError }}</p>
 
-        <section v-if="!detailByIdentifier && kpis.length" class="data-cards-section">
+        <section v-else-if="kpis.length" class="data-cards-section">
           <div class="data-cards">
             <div v-for="kpi in kpis" :key="kpi.id" class="data-card-container">
               <KpiCardComponent
@@ -396,6 +404,25 @@ onMounted(async () => {
   padding-bottom: 24px;
 }
 
+.br-map {
+  background: #f9f2d2;
+  height: 220px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px 24px 56px;
+  flex-shrink: 0;
+  box-sizing: border-box;
+}
+
+.br-map img {
+  width: min(340px, 32vw);
+  max-height: 180px;
+  height: auto;
+  object-fit: contain;
+  display: block;
+}
+
 .banner-content {
   height: 220px;
   background-size: contain;
@@ -407,8 +434,9 @@ onMounted(async () => {
   flex-grow: 2;
   flex-direction: column;
   justify-content: center;
-  padding: 70px;
+  padding: 70px 70px 70px 24px;
   gap: 10px;
+  box-sizing: border-box;
 }
 
 .banner-content h1 {
@@ -485,6 +513,10 @@ onMounted(async () => {
 @media screen and (max-width: 950px) {
   .banner-container {
     flex-direction: column;
+  }
+
+  .br-map {
+    display: none;
   }
 
   .banner-content {
