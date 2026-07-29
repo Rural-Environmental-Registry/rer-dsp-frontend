@@ -3,6 +3,7 @@ import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { faSearch } from '@fortawesome/free-solid-svg-icons'
 import SelectInputComponent from '@/components/SelectInputComponent.vue'
+import MultiSelectInputComponent from '@/components/MultiSelectInputComponent.vue'
 import TextInputComponent from '@/components/TextInputComponent.vue'
 import { territoryOptionsToSelectOptions } from '@/adapters/selectOptionAdapters'
 import {
@@ -18,10 +19,17 @@ import { getTerritoryOptions } from '@/services/territoryService'
 
 export interface SearchFilterPayload {
   level1: string
-  level2: string
-  level3: string
+  level2: string[]
+  level3: string[]
   identifier: string
   theme: string
+}
+
+export interface TerritorySelection {
+  level2Id?: string | null
+  level3Id?: string | null
+  level2Label?: string | null
+  level3Label?: string | null
 }
 
 const props = withDefaults(
@@ -44,8 +52,8 @@ const emit = defineEmits<{
 
 const form = reactive<SearchFilterPayload>({
   level1: '',
-  level2: '',
-  level3: '',
+  level2: [],
+  level3: [],
   identifier: '',
   theme: '',
 })
@@ -53,6 +61,7 @@ const form = reactive<SearchFilterPayload>({
 const loadingRoot = ref(false)
 const loadingChildren = ref(false)
 const loadError = ref('')
+const suppressHierarchyWatch = ref(false)
 
 const level1Options = ref<SelectOption[]>([])
 const level2Options = ref<SelectOption[]>([])
@@ -97,11 +106,37 @@ function clearDescendantOptions(level: HierarchyLevelKey): void {
   }
 }
 
+function ensureOption(
+  level: HierarchyLevelKey,
+  id: string,
+  label?: string | null,
+): void {
+  const current =
+    level === 'level1'
+      ? level1Options.value
+      : level === 'level2'
+        ? level2Options.value
+        : level3Options.value
+
+  if (current.some((option) => option.value === id)) {
+    return
+  }
+
+  const next = [...current, { value: id, label: label?.trim() || id }]
+  setOptionsForLevel(level, next)
+}
+
 function isFieldDisabled(key: HierarchyLevelKey): boolean {
   const parent = parentKey(key)
   if (!parent) return false
   if (!props.config.hierarchyKeys.includes(parent)) return false
-  return !form[parent]
+  const parentValue = form[parent]
+  return Array.isArray(parentValue) ? parentValue.length === 0 : !parentValue
+}
+
+function hasFormValue(key: HierarchyLevelKey): boolean {
+  const value = form[key]
+  return Array.isArray(value) ? value.length > 0 : Boolean(value)
 }
 
 async function loadRootOptions(): Promise<void> {
@@ -156,23 +191,61 @@ async function loadChildOptions(parentLevel: HierarchyLevelKey, parentId: string
   }
 }
 
+async function loadLevel3OptionsForParents(parentIds: string[]): Promise<void> {
+  if (!props.config.hierarchyKeys.includes('level3')) {
+    return
+  }
+
+  const ids = parentIds.map((id) => id.trim()).filter(Boolean)
+  if (!ids.length) {
+    setOptionsForLevel('level3', [])
+    return
+  }
+
+  loadingChildren.value = true
+  try {
+    const results = await Promise.all(ids.map((id) => getTerritoryOptions('level3', id)))
+    const merged = new Map<string, SelectOption>()
+    for (const options of results) {
+      for (const option of territoryOptionsToSelectOptions(options)) {
+        merged.set(option.value, option)
+      }
+    }
+    setOptionsForLevel(
+      'level3',
+      [...merged.values()].sort((a, b) => a.label.localeCompare(b.label, undefined, { sensitivity: 'base' })),
+    )
+  } catch (error) {
+    console.error(error)
+    setOptionsForLevel('level3', [])
+  } finally {
+    loadingChildren.value = false
+  }
+}
+
 watch(
   () => form.level1,
   (value) => {
+    if (suppressHierarchyWatch.value) {
+      return
+    }
     if (props.config.hierarchyKeys.includes('level1')) {
-      form.level2 = ''
-      form.level3 = ''
+      form.level2 = []
+      form.level3 = []
       void loadChildOptions('level1', value)
     }
   },
 )
 
 watch(
-  () => form.level2,
-  (value) => {
+  () => form.level2.slice().join(','),
+  () => {
+    if (suppressHierarchyWatch.value) {
+      return
+    }
     if (props.config.hierarchyKeys.includes('level3')) {
-      form.level3 = ''
-      void loadChildOptions('level2', value)
+      form.level3 = []
+      void loadLevel3OptionsForParents(form.level2)
     }
   },
 )
@@ -190,19 +263,24 @@ onMounted(() => {
 
 const canSearch = computed(() => {
   if (props.config.hierarchyKeys.includes('level1')) {
-    return Boolean(form.level2)
+    return form.level2.length > 0
   }
-  const hasHierarchy = props.config.hierarchyKeys.some((key) => Boolean(form[key]))
+  const hasHierarchy = props.config.hierarchyKeys.some((key) => hasFormValue(key))
   const hasIdentifier = Boolean(props.config.identifier && form.identifier.trim())
   return hasHierarchy || hasIdentifier
 })
 
-const handleSearch = () => emit('search', { ...form })
+const handleSearch = () =>
+  emit('search', {
+    ...form,
+    level2: [...form.level2],
+    level3: [...form.level3],
+  })
 
 const handleClear = () => {
   form.level1 = ''
-  form.level2 = ''
-  form.level3 = ''
+  form.level2 = []
+  form.level3 = []
   form.identifier = ''
   form.theme = ''
   level3Options.value = []
@@ -211,6 +289,43 @@ const handleClear = () => {
   }
   emit('clear')
 }
+
+async function applyTerritorySelection(selection: TerritorySelection): Promise<void> {
+  const level2Id = selection.level2Id?.trim() ?? ''
+  const level3Id = selection.level3Id?.trim() ?? ''
+
+  suppressHierarchyWatch.value = true
+  try {
+    if (!level2Id) {
+      form.level2 = []
+      form.level3 = []
+      if (props.config.hierarchyKeys.includes('level3')) {
+        level3Options.value = []
+      }
+      return
+    }
+
+    ensureOption('level2', level2Id, selection.level2Label)
+    form.level2 = [level2Id]
+
+    if (props.config.hierarchyKeys.includes('level3')) {
+      await loadLevel3OptionsForParents([level2Id])
+      if (level3Id) {
+        ensureOption('level3', level3Id, selection.level3Label)
+        form.level3 = [level3Id]
+      } else {
+        form.level3 = []
+      }
+    }
+  } finally {
+    suppressHierarchyWatch.value = false
+  }
+}
+
+defineExpose({
+  applyTerritorySelection,
+  form,
+})
 </script>
 
 <template>
@@ -229,15 +344,24 @@ const handleClear = () => {
           class="field-slot"
           :class="`field-slot--${field.key}`"
         >
-          <SelectInputComponent
+          <MultiSelectInputComponent
+            v-if="field.key === 'level2' || field.key === 'level3'"
             :id="field.key"
             v-model="form[field.key]"
             :label="field.label"
             :placeholder="field.placeholder"
             :items="optionsByLevel[field.key]"
             :disabled="isFieldDisabled(field.key) || loadingRoot"
-          >
-          </SelectInputComponent>
+          />
+          <SelectInputComponent
+            v-else
+            :id="field.key"
+            v-model="form[field.key]"
+            :label="field.label"
+            :placeholder="field.placeholder"
+            :items="optionsByLevel[field.key]"
+            :disabled="isFieldDisabled(field.key) || loadingRoot"
+          />
         </div>
 
         <div v-if="config.identifier" class="field-slot field-slot--identifier">
@@ -325,9 +449,9 @@ const handleClear = () => {
 }
 
 .field-slot--level2 {
-  width: 13%;
-  min-width: 140px;
-  flex: 0 1 160px;
+  min-width: 220px;
+  width: 30%;
+  flex: 1 1 240px;
 }
 
 .field-slot--level3,

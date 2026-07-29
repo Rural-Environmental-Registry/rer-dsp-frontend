@@ -1,6 +1,6 @@
 import { httpGet } from '@/services/httpClient'
 import type { HierarchyLevelKey } from '@/types/hierarchy'
-import type { TerritoryOption } from '@/types/territory'
+import type { TerritoryBoundaryBox, TerritoryOption } from '@/types/territory'
 
 export async function getTerritoryOptions(
   level: HierarchyLevelKey,
@@ -12,4 +12,24 @@ export async function getTerritoryOptions(
   }
   const data = await httpGet<TerritoryOption[]>(`territory/options?${params.toString()}`)
   return data ?? []
+}
+
+export async function getTerritoryBoundaryBox(options: {
+  level2Ids?: string[] | null
+  level3Ids?: string[] | null
+}): Promise<TerritoryBoundaryBox> {
+  const params = new URLSearchParams()
+  for (const id of options.level2Ids ?? []) {
+    const trimmed = id?.trim()
+    if (trimmed) {
+      params.append('level2Ids', trimmed)
+    }
+  }
+  for (const id of options.level3Ids ?? []) {
+    const trimmed = id?.trim()
+    if (trimmed) {
+      params.append('level3Ids', trimmed)
+    }
+  }
+  return httpGet<TerritoryBoundaryBox>(`territory/boundary-box?${params.toString()}`)
 }

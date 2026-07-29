@@ -30,3 +30,21 @@ export async function getDetailsByIdentifier(
     throw error
   }
 }
+
+export async function getDetailsByCoordinates(coords: {
+  lat: number
+  lng: number
+}): Promise<DetailByIdentifierDTO | null> {
+  try {
+    return await httpGet<DetailByIdentifierDTO>(
+      'totalizer/getDetailsByCoordinates',
+      { lat: coords.lat, lng: coords.lng },
+    )
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error)
+    if (message.includes('HTTP 404')) {
+      return null
+    }
+    throw error
+  }
+}

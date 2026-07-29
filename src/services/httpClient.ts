@@ -61,8 +61,24 @@ async function parseJson<T>(response: Response): Promise<T> {
   return (await response.json()) as T
 }
 
-export async function httpGet<T>(path: string): Promise<T> {
-  const url = await buildUrl(path)
+export async function httpGet<T>(
+  path: string,
+  query?: Record<string, string | number | boolean | null | undefined>,
+): Promise<T> {
+  let url = await buildUrl(path)
+  if (query) {
+    const params = new URLSearchParams()
+    for (const [key, value] of Object.entries(query)) {
+      if (value === null || value === undefined) {
+        continue
+      }
+      params.set(key, String(value))
+    }
+    const qs = params.toString()
+    if (qs) {
+      url = `${url}?${qs}`
+    }
+  }
   const response = await fetch(url)
   return parseJson<T>(response)
 }

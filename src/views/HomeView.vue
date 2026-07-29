@@ -22,9 +22,19 @@ import {
 import { FALLBACK_INSTALLATION_CONFIG } from '@/config/installationConfigFallback'
 import { getInstallationConfig } from '@/services/configService'
 import {
+  getDetailsByCoordinates,
   getDetailsByIdentifier,
   getTotalizers,
 } from '@/services/totalizerService'
+import type { LayerData } from '@rural-environmental-registry/map_component/dist/types'
+import {
+  fetchAoiGeometryById,
+  findAoiLayer,
+  wmsBaseUrlToWfs,
+} from '@/services/geoserverAoiService'
+import { getTerritoryBoundaryBox } from '@/services/territoryService'
+import { darkenHex } from '@/utils/darkenColor'
+import { scrollToElement } from '@/utils/scrollToElement'
 import type { HomeKpisConfig } from '@/types/installationConfig'
 import type { DetailByIdentifierDTO } from '@/types/totalizer'
 import DspMapComponent from '@/components/DspMapComponent.vue'
@@ -33,17 +43,132 @@ import { getMoreContentsCards } from '@/config/moreContentsUi'
 
 const pageCards = getMoreContentsCards('home')
 
+const AOI_HIGHLIGHT_DARKEN_BORDER = 0.75
+const AOI_HIGHLIGHT_DARKEN_FILL = 0.6
+
 const searching = ref(false)
 const searchError = ref('')
 const detailByIdentifier = ref<DetailByIdentifierDTO | null>(null)
+const pendingDetail = ref<DetailByIdentifierDTO | null>(null)
+const candidateIds = ref<string[]>([])
 const kpiConfig = ref<HomeKpisConfig>(FALLBACK_INSTALLATION_CONFIG.kpis)
 const kpis = ref<KpiItem[]>(resolveHomeKpis(mockTotalizerValues, kpiConfig.value))
 const searchConfig = ref<SearchFormConfig>(homeSearchConfig)
 const hierarchyFields = ref<Record<HierarchyLevelKey, HierarchyFieldConfig>>(hierarchyFieldsByKey)
+const mapRef = ref<InstanceType<typeof DspMapComponent> | null>(null)
+const searchFilterRef = ref<InstanceType<typeof SearchFilterComponent> | null>(null)
 
-async function loadTotalizers(level2Id: string | null, level3Ids: string[]): Promise<void> {
+function buildDetailWithCandidates(
+  detail: DetailByIdentifierDTO,
+  candidates?: string[],
+): DetailByIdentifierDTO {
+  const id = detail.id?.trim()
+  const nextCandidates =
+    candidates ??
+    (id
+      ? [id, ...(detail.otherIds ?? []).filter((otherId) => otherId && otherId !== id)]
+      : [...(detail.otherIds ?? [])])
+
+  candidateIds.value = nextCandidates
+  return {
+    ...detail,
+    otherIds: id
+      ? nextCandidates.filter((candidateId) => candidateId !== id)
+      : nextCandidates,
+  }
+}
+
+function applyDetail(detail: DetailByIdentifierDTO, candidates?: string[]): void {
+  const next = buildDetailWithCandidates(detail, candidates)
+  pendingDetail.value = next
+  detailByIdentifier.value = next
+}
+
+function clearDetailAndMapSelection(): void {
+  detailByIdentifier.value = null
+  pendingDetail.value = null
+  candidateIds.value = []
+  mapRef.value?.clearSelection()
+}
+
+function resolveHighlightStyleFromLayer(
+  layer: LayerData | null,
+  fallbackColor = '#cccc00',
+  fallbackFill = '#ffff00',
+): { color: string; fillColor: string } {
+  const color = layer?.style?.color ?? fallbackColor
+  const fillColor = layer?.style?.fillColor ?? fallbackFill
+  return {
+    color: darkenHex(color, AOI_HIGHLIGHT_DARKEN_BORDER),
+    fillColor: darkenHex(
+      fillColor === 'transparent' ? color : fillColor,
+      AOI_HIGHLIGHT_DARKEN_FILL,
+    ),
+  }
+}
+
+function resolveHighlightStyle(): { color: string; fillColor: string } {
+  return resolveHighlightStyleFromLayer(findAoiLayer(mapRef.value?.layers ?? null))
+}
+
+function resolveButtonCoords(
+  detail: DetailByIdentifierDTO,
+  fallback?: { lat: number; lng: number },
+): { lat: number; lng: number } | null {
+  const lat = Number(detail.latitude)
+  const lng = Number(detail.longitude)
+  if (Number.isFinite(lat) && Number.isFinite(lng)) {
+    return { lat, lng }
+  }
+  return fallback ?? null
+}
+
+async function highlightAoiOnMap(
+  detail: DetailByIdentifierDTO,
+  fallbackCoords?: { lat: number; lng: number },
+): Promise<void> {
+  const id = detail.id?.trim()
+  if (!id) {
+    return
+  }
+
+  const aoiLayer = findAoiLayer(mapRef.value?.layers ?? null)
+  if (!aoiLayer?.baseUrl) {
+    searchError.value = 'AOI map layer is not configured.'
+    return
+  }
+
+  const geojson = await fetchAoiGeometryById(id, wmsBaseUrlToWfs(aoiLayer.baseUrl))
+  if (!geojson) {
+    searchError.value = 'Could not load AOI geometry from GeoServer.'
+    return
+  }
+
+  mapRef.value?.showSelectedAoiGeometry(geojson, resolveHighlightStyle())
+
+  const coords = resolveButtonCoords(detail, fallbackCoords)
+  if (coords) {
+    mapRef.value?.showDetailButton(coords.lat, coords.lng)
+  }
+}
+
+async function zoomToTerritory(
+  level2Ids: string[],
+  level3Ids: string[] = [],
+): Promise<void> {
+  const bbox = await getTerritoryBoundaryBox({
+    level2Ids,
+    level3Ids,
+  })
+  mapRef.value?.fitBounds([
+    [bbox.minY, bbox.minX],
+    [bbox.maxY, bbox.maxX],
+  ])
+}
+
+async function loadTotalizers(level2Ids: string[], level3Ids: string[]): Promise<void> {
   const totalizers = await getTotalizers({
-    level2Id,
+    level2Ids,
     level3Ids,
   })
   kpis.value = resolveHomeKpis(totalizers, kpiConfig.value)
@@ -51,7 +176,7 @@ async function loadTotalizers(level2Id: string | null, level3Ids: string[]): Pro
 
 async function loadInitialKpis(): Promise<void> {
   try {
-    await loadTotalizers(null, [])
+    await loadTotalizers([], [])
   } catch (error) {
     console.warn('Initial KPIs from API unavailable — keeping mock values.', error)
     kpis.value = resolveHomeKpis(mockTotalizerValues, kpiConfig.value)
@@ -61,7 +186,7 @@ async function loadInitialKpis(): Promise<void> {
 const onSearch = async (payload: SearchFilterPayload) => {
   searching.value = true
   searchError.value = ''
-  detailByIdentifier.value = null
+  clearDetailAndMapSelection()
 
   try {
     const identifier = payload.identifier.trim()
@@ -72,17 +197,37 @@ const onSearch = async (payload: SearchFilterPayload) => {
         searchError.value = 'Identifier not found.'
         return
       }
-      detailByIdentifier.value = detail
+      applyDetail(detail, [detail.id ?? identifier])
+      await searchFilterRef.value?.applyTerritorySelection({
+        level2Id: detail.territory?.level2?.id,
+        level3Id: detail.territory?.level3?.id,
+        level2Label: detail.territory?.level2?.name,
+        level3Label: detail.territory?.level3?.name,
+      })
+      try {
+        await highlightAoiOnMap(detail)
+      } catch (error) {
+        console.error(error)
+        searchError.value = 'Could not load AOI geometry from GeoServer.'
+      }
       return
     }
 
-    if (!payload.level2) {
+    const level2Ids = (payload.level2 ?? []).map(String).filter((id) => id.trim())
+    if (!level2Ids.length) {
       searchError.value = 'Select at least level 2 to search.'
       return
     }
 
-    const level3Ids = payload.level3 ? [String(payload.level3)] : []
-    await loadTotalizers(payload.level2, level3Ids)
+    const level3Ids = (payload.level3 ?? []).map(String).filter((id) => id.trim())
+    await loadTotalizers(level2Ids, level3Ids)
+    try {
+      await zoomToTerritory(level2Ids, level3Ids)
+      scrollToMap()
+    } catch (error) {
+      console.error(error)
+      searchError.value = 'Could not load territory boundary box.'
+    }
   } catch (error) {
     console.error(error)
     searchError.value = 'Search failed. Check the API (config/env.json).'
@@ -93,8 +238,77 @@ const onSearch = async (payload: SearchFilterPayload) => {
 
 const onClear = () => {
   searchError.value = ''
-  detailByIdentifier.value = null
+  clearDetailAndMapSelection()
   void loadInitialKpis()
+}
+
+const onAoiClick = async (coords: { lat: number; lng: number }) => {
+  searching.value = true
+  searchError.value = ''
+  detailByIdentifier.value = null
+
+  try {
+    const detail = await getDetailsByCoordinates(coords)
+    if (!detail) {
+      searchError.value = 'No area of interest found at this location.'
+      mapRef.value?.clearSelection()
+      pendingDetail.value = null
+      candidateIds.value = []
+      return
+    }
+
+    pendingDetail.value = buildDetailWithCandidates(detail)
+    await highlightAoiOnMap(pendingDetail.value, coords)
+  } catch (error) {
+    console.error(error)
+    searchError.value = 'Map click search failed. Check the API (config/env.json).'
+  } finally {
+    searching.value = false
+  }
+}
+
+const onOpenDetails = () => {
+  if (!pendingDetail.value) {
+    return
+  }
+  detailByIdentifier.value = pendingDetail.value
+}
+
+function scrollToMap(): void {
+  scrollToElement('.dsp-map')
+}
+
+const onSelectAoi = async (id: string) => {
+  if (!id || id === pendingDetail.value?.id) {
+    return
+  }
+
+  searching.value = true
+  searchError.value = ''
+
+  try {
+    const detail = await getDetailsByIdentifier(id)
+    if (!detail) {
+      searchError.value = 'Identifier not found.'
+      return
+    }
+
+    const next = buildDetailWithCandidates(
+      detail,
+      candidateIds.value.length ? candidateIds.value : undefined,
+    )
+    pendingDetail.value = next
+    if (detailByIdentifier.value) {
+      detailByIdentifier.value = next
+    }
+    scrollToMap()
+    await highlightAoiOnMap(next)
+  } catch (error) {
+    console.error(error)
+    searchError.value = 'Search failed. Check the API (config/env.json).'
+  } finally {
+    searching.value = false
+  }
 }
 
 async function loadInstallationConfig(): Promise<void> {
@@ -124,6 +338,7 @@ onMounted(async () => {
     <div class="main-page-container">
       <div class="content-general">
         <SearchFilterComponent
+          ref="searchFilterRef"
           :config="searchConfig"
           :hierarchy-fields="hierarchyFields"
           @search="onSearch"
@@ -133,14 +348,7 @@ onMounted(async () => {
         <p v-if="searching" class="status-msg">Searching...</p>
         <p v-else-if="searchError" class="status-msg status-msg--error">{{ searchError }}</p>
 
-        <DspMapComponent />
-
-        <DetailSearchComponent
-          v-if="detailByIdentifier"
-          :detail="detailByIdentifier"
-        />
-
-        <section v-else-if="kpis.length" class="data-cards-section">
+        <section v-if="!detailByIdentifier && kpis.length" class="data-cards-section">
           <div class="data-cards">
             <div v-for="kpi in kpis" :key="kpi.id" class="data-card-container">
               <KpiCardComponent
@@ -155,6 +363,19 @@ onMounted(async () => {
             </div>
           </div>
         </section>
+
+        <DspMapComponent
+          ref="mapRef"
+          :busy="searching"
+          @aoi-click="onAoiClick"
+          @open-details="onOpenDetails"
+        />
+
+        <DetailSearchComponent
+          v-if="detailByIdentifier"
+          :detail="detailByIdentifier"
+          @select-aoi="onSelectAoi"
+        />
       </div>
     </div>
 

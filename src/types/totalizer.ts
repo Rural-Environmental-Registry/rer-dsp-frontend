@@ -8,7 +8,7 @@ export interface TotalizerDTO {
 }
 
 export interface TotalizerFilterDTO {
-  level2Id: string | null
+  level2Ids: string[]
   level3Ids: string[]
 }
 
@@ -30,4 +30,5 @@ export interface DetailByIdentifierDTO {
   registrationDate?: string
   alterationDate?: string
   area?: number
+  otherIds?: string[]
 }

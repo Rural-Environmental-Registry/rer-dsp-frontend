@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
 import SearchFilterComponent from '@/components/SearchFilterComponent.vue'
+import MultiSelectInputComponent from '@/components/MultiSelectInputComponent.vue'
 import { getTerritoryOptions } from '@/services/territoryService'
 
 vi.mock('@/services/territoryService', () => ({
@@ -25,7 +26,13 @@ describe('SearchFilterComponent', () => {
         ]
       }
       if (level === 'level3' && parentId === 'DF') {
-        return [{ id: '5300108', name: 'Brasília' }]
+        return [
+          { id: '5300108', name: 'Brasília' },
+          { id: '5300109', name: 'Other' },
+        ]
+      }
+      if (level === 'level3' && parentId === 'GO') {
+        return [{ id: '5200050', name: 'Abadia de Goiás' }]
       }
       return []
     })
@@ -43,8 +50,9 @@ describe('SearchFilterComponent', () => {
     const wrapper = mount(SearchFilterComponent)
     await flushPromises()
 
-    const selects = wrapper.findAll('select')
-    await selects[0].setValue('DF')
+    const multiSelects = wrapper.findAllComponents(MultiSelectInputComponent)
+    expect(multiSelects.length).toBeGreaterThanOrEqual(1)
+    await multiSelects[0].vm.$emit('update:modelValue', ['DF'])
     await flushPromises()
 
     expect(getTerritoryOptions).toHaveBeenCalledWith('level3', 'DF')
@@ -55,9 +63,35 @@ describe('SearchFilterComponent', () => {
 
     expect(wrapper.emitted('search')).toBeTruthy()
     expect(wrapper.emitted('search')?.[0]?.[0]).toMatchObject({
-      level2: 'DF',
+      level2: ['DF'],
+      level3: [],
       identifier: '',
       theme: '',
+    })
+  })
+
+  it('should allow selecting multiple level2 and level3 values', async () => {
+    const wrapper = mount(SearchFilterComponent)
+    await flushPromises()
+
+    const multiSelects = wrapper.findAllComponents(MultiSelectInputComponent)
+    await multiSelects[0].vm.$emit('update:modelValue', ['DF', 'GO'])
+    await flushPromises()
+
+    expect(getTerritoryOptions).toHaveBeenCalledWith('level3', 'DF')
+    expect(getTerritoryOptions).toHaveBeenCalledWith('level3', 'GO')
+
+    await multiSelects[1].vm.$emit('update:modelValue', ['5300108', '5200050'])
+    await flushPromises()
+
+    const searchButton = wrapper
+      .findAll('button')
+      .find((button) => button.text().includes('Search'))
+    await searchButton!.trigger('click')
+
+    expect(wrapper.emitted('search')?.[0]?.[0]).toMatchObject({
+      level2: ['DF', 'GO'],
+      level3: ['5300108', '5200050'],
     })
   })
 
@@ -65,13 +99,32 @@ describe('SearchFilterComponent', () => {
     const wrapper = mount(SearchFilterComponent)
     await flushPromises()
 
-    const selects = wrapper.findAll('select')
-    await selects[0].setValue('DF')
+    const multiSelects = wrapper.findAllComponents(MultiSelectInputComponent)
+    await multiSelects[0].vm.$emit('update:modelValue', ['DF'])
     await flushPromises()
 
     const clearButton = wrapper.findAll('button').find((button) => button.text().includes('Clear'))
     await clearButton!.trigger('click')
 
     expect(wrapper.emitted('clear')).toBeTruthy()
+    expect(wrapper.vm.form.level2).toEqual([])
+    expect(wrapper.vm.form.level3).toEqual([])
+  })
+
+  it('should apply territory selection for level2 and level3', async () => {
+    const wrapper = mount(SearchFilterComponent)
+    await flushPromises()
+
+    await wrapper.vm.applyTerritorySelection({
+      level2Id: 'DF',
+      level3Id: '5300108',
+      level2Label: 'DF - Distrito Federal',
+      level3Label: 'Brasília',
+    })
+    await flushPromises()
+
+    expect(getTerritoryOptions).toHaveBeenCalledWith('level3', 'DF')
+    expect(wrapper.vm.form.level2).toEqual(['DF'])
+    expect(wrapper.vm.form.level3).toEqual(['5300108'])
   })
 })

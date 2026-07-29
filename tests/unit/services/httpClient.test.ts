@@ -107,7 +107,7 @@ describe('httpClient', () => {
 
   describe('httpPost', () => {
     it('should post JSON body', async () => {
-      const body = { level2Id: 'DF', level3Ids: [] }
+      const body = { level2Ids: ['DF'], level3Ids: [] }
       await httpPost('totalizer/getTotalizers', body)
 
       expect(fetch).toHaveBeenCalledWith(

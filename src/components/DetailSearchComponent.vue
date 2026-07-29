@@ -16,11 +16,18 @@ const props = defineProps<{
   detail: DetailByIdentifierDTO
 }>()
 
+const emit = defineEmits<{
+  'select-aoi': [id: string]
+}>()
+
 const installation = peekInstallationConfig()
 const config = buildDetailByIdentifierConfig(installation)
 const datePattern = installation.formats.date
 const headerFields = computed(() => getDetailFieldsByGroup('header', config))
 const propertyRows = computed(() => getPropertyFieldRows(config))
+const otherIds = computed(() =>
+  (props.detail.otherIds ?? []).filter((id) => id && id !== props.detail.id),
+)
 
 function readFieldValue(field: DetailFieldConfig): string {
   const raw = readDetailFieldValue(props.detail, field.key)
@@ -39,10 +46,17 @@ function readFieldValue(field: DetailFieldConfig): string {
 
   return String(raw)
 }
+
+function onSelectOther(id: string): void {
+  emit('select-aoi', id)
+}
 </script>
 
 <template>
-  <section class="details-panel" :aria-label="config.sectionTitle">
+  <section
+    class="details-panel dsp-aoi-details-panel"
+    :aria-label="config.sectionTitle"
+  >
     <h2 class="section-title">{{ config.sectionTitle }}</h2>
 
     <div class="details-card">
@@ -76,6 +90,21 @@ function readFieldValue(field: DetailFieldConfig): string {
             <p>{{ field.label }}</p>
             <strong>{{ readFieldValue(field) }}</strong>
           </div>
+        </div>
+      </div>
+
+      <div v-if="otherIds.length" class="other-aois">
+        <p class="other-aois__label">Outros próximos</p>
+        <div class="other-aois__list">
+          <button
+            v-for="id in otherIds"
+            :key="id"
+            type="button"
+            class="other-aois__btn"
+            @click="onSelectOther(id)"
+          >
+            {{ id }}
+          </button>
         </div>
       </div>
 
@@ -171,6 +200,37 @@ function readFieldValue(field: DetailFieldConfig): string {
   border: none;
   border-top: 1px solid #e5e5e5;
   margin: 20px 0;
+}
+
+.other-aois {
+  margin: 0 0 24px;
+}
+
+.other-aois__label {
+  margin: 0 0 10px;
+  color: #707070;
+  font-size: 15px;
+}
+
+.other-aois__list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.other-aois__btn {
+  background: #fff;
+  border: 1px solid #1351b4;
+  color: #1351b4;
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.other-aois__btn:hover {
+  background: #e8f0fe;
 }
 
 .actions {
