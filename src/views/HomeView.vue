@@ -26,17 +26,23 @@ import {
   getDetailsByIdentifier,
   getTotalizers,
 } from '@/services/totalizerService'
-import type { LayerData } from '@rural-environmental-registry/map_component/dist/types'
+import type {
+  LayerData,
+  MapOptionsConfig,
+} from '@rural-environmental-registry/map_component/dist/types'
 import {
   fetchAoiGeometryById,
   findAoiLayer,
   wmsBaseUrlToWfs,
 } from '@/services/geoserverAoiService'
 import { getTerritoryBoundaryBox } from '@/services/territoryService'
+import { DSP_MAP_OPTIONS } from '@/config/mapOptions'
+import { bboxToMapView } from '@/utils/bboxToMapView'
 import { darkenHex } from '@/utils/darkenColor'
 import { scrollToElement } from '@/utils/scrollToElement'
 import type { HomeKpisConfig } from '@/types/installationConfig'
 import type { DetailByIdentifierDTO } from '@/types/totalizer'
+import type { TerritoryBoundaryBox } from '@/types/territory'
 import DspMapComponent from '@/components/DspMapComponent.vue'
 import MoreContents from '@/components/MoreContents.vue'
 import { getMoreContentsCards } from '@/config/moreContentsUi'
@@ -57,6 +63,22 @@ const searchConfig = ref<SearchFormConfig>(homeSearchConfig)
 const hierarchyFields = ref<Record<HierarchyLevelKey, HierarchyFieldConfig>>(hierarchyFieldsByKey)
 const mapRef = ref<InstanceType<typeof DspMapComponent> | null>(null)
 const searchFilterRef = ref<InstanceType<typeof SearchFilterComponent> | null>(null)
+const mapOptions = ref<MapOptionsConfig | null>(null)
+
+function buildMapOptionsFromBbox(bbox: TerritoryBoundaryBox): MapOptionsConfig {
+  const { center, zoom } = bboxToMapView(bbox)
+  return {
+    ...DSP_MAP_OPTIONS,
+    map: {
+      ...DSP_MAP_OPTIONS.map,
+      config: {
+        ...DSP_MAP_OPTIONS.map.config,
+        center,
+        zoom,
+      },
+    },
+  }
+}
 
 function buildDetailWithCandidates(
   detail: DetailByIdentifierDTO,
@@ -152,6 +174,18 @@ async function highlightAoiOnMap(
   }
 }
 
+function applyTerritoryBounds(bbox: {
+  minX: number
+  minY: number
+  maxX: number
+  maxY: number
+}): void {
+  mapRef.value?.fitBounds([
+    [bbox.minY, bbox.minX],
+    [bbox.maxY, bbox.maxX],
+  ])
+}
+
 async function zoomToTerritory(
   level2Ids: string[],
   level3Ids: string[] = [],
@@ -160,10 +194,16 @@ async function zoomToTerritory(
     level2Ids,
     level3Ids,
   })
-  mapRef.value?.fitBounds([
-    [bbox.minY, bbox.minX],
-    [bbox.maxY, bbox.maxX],
-  ])
+  applyTerritoryBounds(bbox)
+}
+
+async function zoomToInitialTerritory(): Promise<void> {
+  try {
+    const bbox = await getTerritoryBoundaryBox({})
+    applyTerritoryBounds(bbox)
+  } catch (error) {
+    console.warn('Initial territory boundary box unavailable.', error)
+  }
 }
 
 async function loadTotalizers(level2Ids: string[], level3Ids: string[]): Promise<void> {
@@ -180,6 +220,16 @@ async function loadInitialKpis(): Promise<void> {
   } catch (error) {
     console.warn('Initial KPIs from API unavailable — keeping mock values.', error)
     kpis.value = resolveHomeKpis(mockTotalizerValues, kpiConfig.value)
+  }
+}
+
+async function loadInitialMapOptions(): Promise<void> {
+  try {
+    const bbox = await getTerritoryBoundaryBox({})
+    mapOptions.value = buildMapOptionsFromBbox(bbox)
+  } catch (error) {
+    console.warn('Initial territory boundary box unavailable — using default map view.', error)
+    mapOptions.value = DSP_MAP_OPTIONS
   }
 }
 
@@ -240,6 +290,7 @@ const onClear = () => {
   searchError.value = ''
   clearDetailAndMapSelection()
   void loadInitialKpis()
+  void zoomToInitialTerritory()
 }
 
 const onAoiClick = async (coords: { lat: number; lng: number }) => {
@@ -320,7 +371,7 @@ async function loadInstallationConfig(): Promise<void> {
 
 onMounted(async () => {
   await loadInstallationConfig()
-  await loadInitialKpis()
+  await Promise.all([loadInitialKpis(), loadInitialMapOptions()])
 })
 </script>
 
@@ -365,11 +416,14 @@ onMounted(async () => {
         </section>
 
         <DspMapComponent
+          v-if="mapOptions"
           ref="mapRef"
+          :options="mapOptions"
           :busy="searching"
           @aoi-click="onAoiClick"
           @open-details="onOpenDetails"
         />
+        <div v-else class="dsp-map-placeholder" aria-hidden="true" />
 
         <DetailSearchComponent
           v-if="detailByIdentifier"
@@ -436,6 +490,14 @@ onMounted(async () => {
 
 .content-general {
   width: 92%;
+}
+
+.dsp-map-placeholder {
+  width: 100%;
+  height: 520px;
+  margin: 0 0 24px;
+  border: 1px solid #d9d9d9;
+  background: #f5f5f5;
 }
 
 .status-msg {

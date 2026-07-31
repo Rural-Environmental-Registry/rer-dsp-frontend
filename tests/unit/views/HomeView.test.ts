@@ -10,6 +10,8 @@ import {
 } from '@/services/totalizerService'
 import { fetchAoiGeometryById } from '@/services/geoserverAoiService'
 import { getTerritoryBoundaryBox } from '@/services/territoryService'
+import { DSP_MAP_OPTIONS } from '@/config/mapOptions'
+import { bboxToMapView } from '@/utils/bboxToMapView'
 
 vi.mock('@/services/totalizerService', () => ({
   getTotalizers: vi.fn(),
@@ -70,6 +72,7 @@ const {
 vi.mock('@/components/DspMapComponent.vue', () => ({
   default: {
     name: 'DspMapComponent',
+    props: ['options', 'busy'],
     template: '<div class="dsp-map-stub" />',
     data() {
       return {
@@ -108,6 +111,13 @@ vi.mock('@/components/DspMapComponent.vue', () => ({
     },
   },
 }))
+
+const initialBbox = {
+  minX: -74.0,
+  minY: -34.0,
+  maxX: -34.0,
+  maxY: 5.0,
+}
 
 const territoryBbox = {
   minX: -48.2,
@@ -171,7 +181,14 @@ describe('HomeView', () => {
         },
       ],
     })
-    vi.mocked(getTerritoryBoundaryBox).mockResolvedValue(territoryBbox)
+    vi.mocked(getTerritoryBoundaryBox).mockImplementation(async (options = {}) => {
+      if (
+        !(options.level1Ids?.length || options.level2Ids?.length || options.level3Ids?.length)
+      ) {
+        return initialBbox
+      }
+      return territoryBbox
+    })
   })
 
   it('should render detail panel when identifier search succeeds', async () => {
@@ -287,6 +304,59 @@ describe('HomeView', () => {
     expect(wrapper.text()).toContain('Data Sharing Platform')
     expect(getTotalizers).toHaveBeenCalled()
     expect(wrapper.text()).toContain('Registered properties')
+  })
+
+  it('should mount map with center and zoom derived from L1 boundary-box', async () => {
+    const wrapper = await mountHome()
+    const expectedView = bboxToMapView(initialBbox)
+
+    expect(getTerritoryBoundaryBox).toHaveBeenCalledWith({})
+    expect(fitBounds).not.toHaveBeenCalled()
+
+    const map = wrapper.findComponent({ name: 'DspMapComponent' })
+    expect(map.exists()).toBe(true)
+    expect(map.props('options').map.config.center).toEqual(expectedView.center)
+    expect(map.props('options').map.config.zoom).toBe(expectedView.zoom)
+  })
+
+  it('should mount map with default options when initial boundary-box fails', async () => {
+    vi.mocked(getTerritoryBoundaryBox).mockRejectedValueOnce(new Error('bbox unavailable'))
+
+    const wrapper = await mountHome()
+
+    const map = wrapper.findComponent({ name: 'DspMapComponent' })
+    expect(map.exists()).toBe(true)
+    expect(map.props('options')).toEqual(DSP_MAP_OPTIONS)
+    expect(fitBounds).not.toHaveBeenCalled()
+  })
+
+  it('should reset selection KPIs and zoom to default boundary-box on clear', async () => {
+    const wrapper = await mountHome()
+    vi.clearAllMocks()
+    vi.mocked(getTotalizers).mockResolvedValue([
+      {
+        name: 'Registered properties',
+        code: 'AREA_OF_INTEREST',
+        value: 100,
+        unitOfMeasurement: 'un.',
+      },
+    ])
+    vi.mocked(getTerritoryBoundaryBox).mockResolvedValue(initialBbox)
+
+    const searchFilter = wrapper.findComponent(SearchFilterComponent)
+    await searchFilter.vm.$emit('clear')
+    await flushPromises()
+
+    expect(clearSelection).toHaveBeenCalled()
+    expect(getTotalizers).toHaveBeenCalledWith({
+      level2Ids: [],
+      level3Ids: [],
+    })
+    expect(getTerritoryBoundaryBox).toHaveBeenCalledWith({})
+    expect(fitBounds).toHaveBeenCalledWith([
+      [initialBbox.minY, initialBbox.minX],
+      [initialBbox.maxY, initialBbox.maxX],
+    ])
   })
 
   it('should zoom to territory bbox on L2/L3 search without identifier and without detail button', async () => {

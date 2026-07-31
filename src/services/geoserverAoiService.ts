@@ -66,6 +66,7 @@ export function buildFeatureWfsUrl(
     request: 'GetFeature',
     typeNames: typeName,
     outputFormat: 'application/json',
+    srsName: 'EPSG:4326',
     CQL_FILTER: `id='${featureId.replaceAll("'", "''")}'`,
   })
   const base = wfsBaseUrl.replace(/\/$/, '')

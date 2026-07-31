@@ -5,7 +5,7 @@ export const DSP_MAP_OPTIONS: MapOptionsConfig = {
     config: {
       id: 'dsp-home-map',
       center: [-14.2, -51.9],
-      zoom: 4,
+      zoom: 10,
       removeControlLayers: false,
       dragging: true,
       scrollWheelZoom: true,

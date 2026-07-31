@@ -23,7 +23,10 @@ const props = withDefaults(
 const emit = defineEmits<{
   'aoi-click': [payload: { lat: number; lng: number }]
   'open-details': []
+  ready: []
 }>()
+
+const readyEmitted = ref(false)
 
 const layers = ref<MapLayers | null>(null)
 const loadError = ref('')
@@ -144,7 +147,7 @@ function buildDetailButtonContent(L: {
   const button = document.createElement('button')
   button.type = 'button'
   button.className = 'dsp-aoi-map-detail-btn'
-  button.textContent = 'Ver Detalhes do Imóvel'
+  button.textContent = 'Ver Detalhes'
   container.appendChild(button)
 
   L.DomEvent?.disableClickPropagation(container)
@@ -207,6 +210,10 @@ watch(
     }
     await nextTick()
     bindMapClick()
+    if (!readyEmitted.value) {
+      readyEmitted.value = true
+      emit('ready')
+    }
   },
   { immediate: true },
 )

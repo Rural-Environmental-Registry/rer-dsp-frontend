@@ -43,4 +43,23 @@ describe('territoryService', () => {
 
     expect(httpGet).toHaveBeenCalledWith('territory/boundary-box?level2Ids=DF')
   })
+
+  it('should request boundary-box without params for initial view', async () => {
+    const bbox = { minX: -74.0, minY: -34.0, maxX: -34.0, maxY: 5.0 }
+    vi.mocked(httpGet).mockResolvedValue(bbox)
+
+    const result = await getTerritoryBoundaryBox({})
+
+    expect(httpGet).toHaveBeenCalledWith('territory/boundary-box')
+    expect(result).toEqual(bbox)
+  })
+
+  it('should request boundary-box with level1Ids', async () => {
+    const bbox = { minX: -70.0, minY: -5.0, maxX: -50.0, maxY: 5.0 }
+    vi.mocked(httpGet).mockResolvedValue(bbox)
+
+    await getTerritoryBoundaryBox({ level1Ids: ['1', '2'] })
+
+    expect(httpGet).toHaveBeenCalledWith('territory/boundary-box?level1Ids=1&level1Ids=2')
+  })
 })

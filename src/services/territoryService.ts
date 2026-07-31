@@ -15,10 +15,17 @@ export async function getTerritoryOptions(
 }
 
 export async function getTerritoryBoundaryBox(options: {
+  level1Ids?: string[] | null
   level2Ids?: string[] | null
   level3Ids?: string[] | null
-}): Promise<TerritoryBoundaryBox> {
+} = {}): Promise<TerritoryBoundaryBox> {
   const params = new URLSearchParams()
+  for (const id of options.level1Ids ?? []) {
+    const trimmed = id?.trim()
+    if (trimmed) {
+      params.append('level1Ids', trimmed)
+    }
+  }
   for (const id of options.level2Ids ?? []) {
     const trimmed = id?.trim()
     if (trimmed) {
@@ -31,5 +38,8 @@ export async function getTerritoryBoundaryBox(options: {
       params.append('level3Ids', trimmed)
     }
   }
-  return httpGet<TerritoryBoundaryBox>(`territory/boundary-box?${params.toString()}`)
+  const query = params.toString()
+  return httpGet<TerritoryBoundaryBox>(
+    query ? `territory/boundary-box?${query}` : 'territory/boundary-box',
+  )
 }
