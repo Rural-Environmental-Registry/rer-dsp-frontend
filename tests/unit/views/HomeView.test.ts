@@ -302,6 +302,12 @@ describe('HomeView', () => {
 
     expect(wrapper.exists()).toBe(true)
     expect(wrapper.text()).toContain('Data Sharing Platform')
+
+    const logo = wrapper.find('.br-map img')
+    expect(logo.exists()).toBe(true)
+    expect(logo.attributes('src')).toBe(`${import.meta.env.BASE_URL}images/Logo-RER.png`)
+    expect(logo.attributes('alt')).toBe('Logo RER')
+
     expect(getTotalizers).toHaveBeenCalled()
     expect(wrapper.text()).toContain('Registered properties')
   })
