@@ -29,8 +29,6 @@ defineEmits<{
 .chip-btn {
   width: 155px;
   min-height: 40px;
-  max-height: 40px;
-  margin: 0 10px;
   padding: 8px;
   border-radius: 4px;
   border: 1px solid #707070;
@@ -53,9 +51,8 @@ defineEmits<{
   font-size: 14px;
   line-height: 1.2;
   text-align: center;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  white-space: normal;
+  overflow-wrap: break-word;
   max-width: 100%;
 }
 </style>

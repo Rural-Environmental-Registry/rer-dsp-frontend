@@ -267,7 +267,7 @@ watch(themeId, () => emitSelection())
   display: flex;
   flex-direction: row;
   flex-wrap: wrap;
-  gap: 0;
+  gap: 10px;
 }
 
 .level2-block {

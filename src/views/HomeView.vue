@@ -104,6 +104,7 @@ function applyDetail(detail: DetailByIdentifierDTO, candidates?: string[]): void
   const next = buildDetailWithCandidates(detail, candidates)
   pendingDetail.value = next
   detailByIdentifier.value = next
+  kpis.value = []
 }
 
 function clearDetailAndMapSelection(): void {
@@ -254,6 +255,7 @@ const onSearch = async (payload: SearchFilterPayload) => {
         level2Label: detail.territory?.level2?.name,
         level3Label: detail.territory?.level3?.name,
       })
+      scrollToMap()
       try {
         await highlightAoiOnMap(detail)
       } catch (error) {

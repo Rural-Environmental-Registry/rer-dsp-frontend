@@ -13,10 +13,18 @@ import { getTerritoryBoundaryBox } from '@/services/territoryService'
 import { DSP_MAP_OPTIONS } from '@/config/mapOptions'
 import { bboxToMapView } from '@/utils/bboxToMapView'
 
+const { scrollToElement } = vi.hoisted(() => ({
+  scrollToElement: vi.fn(),
+}))
+
 vi.mock('@/services/totalizerService', () => ({
   getTotalizers: vi.fn(),
   getDetailsByIdentifier: vi.fn(),
   getDetailsByCoordinates: vi.fn(),
+}))
+
+vi.mock('@/utils/scrollToElement', () => ({
+  scrollToElement,
 }))
 
 vi.mock('@/services/geoserverAoiService', async () => {
@@ -224,6 +232,7 @@ describe('HomeView', () => {
       'http://localhost:22668/geoserver/dsp/wfs',
     )
     expect(showSelectedAoiGeometry).toHaveBeenCalled()
+    expect(scrollToElement).toHaveBeenCalledWith('.dsp-map')
     expect(searchFilter.vm.form.level2).toEqual(['DF'])
     expect(searchFilter.vm.form.level3).toEqual(['5300108'])
   })

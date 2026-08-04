@@ -112,7 +112,11 @@ onBeforeUnmount(() => {
     <label class="mb-1 text-sm text-gray-500" :for="id">{{ label }}</label>
 
     <div class="relative">
-      <div class="multi-select__trigger" :class="{ 'multi-select__trigger--disabled': disabled }">
+      <div
+        class="multi-select__trigger"
+        :class="{ 'multi-select__trigger--disabled': disabled }"
+        @click="toggleOpen"
+      >
         <span v-if="!selectedValues.length" class="multi-select__summary--placeholder">
           {{ placeholder }}
         </span>
@@ -138,7 +142,6 @@ onBeforeUnmount(() => {
           :disabled="disabled"
           :aria-expanded="open"
           :aria-label="summaryLabel"
-          @click="toggleOpen"
         >
           <span class="multi-select__arrow" aria-hidden="true"></span>
         </button>
@@ -227,7 +230,7 @@ onBeforeUnmount(() => {
 
 .multi-select__dropdown {
   position: absolute;
-  z-index: 20;
+  z-index: 1100;
   top: calc(100% + 4px);
   left: 0;
   right: 0;
