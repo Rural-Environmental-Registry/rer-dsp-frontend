@@ -26,7 +26,7 @@ const ptbrInstallation: InstallationConfig = {
       },
       detail: {
         sectionTitle: 'Detalhes da consulta',
-        propertySectionTitle: 'Dados do registro',
+        areaOfInterestSectionTitle: 'Dados da área de interesse',
         registrationDateLabel: 'Data de registro',
         alterationDateLabel: 'Data de alteração',
         latitudeLabel: 'Latitude',
@@ -70,7 +70,7 @@ describe('detailByIdentifier config', () => {
     expect(byKey.level2Name).toBe('Estado')
     expect(byKey.registrationDate).toBe('Data de registro')
     expect(config.sectionTitle).toBe('Detalhes da consulta')
-    expect(config.propertySectionTitle).toBe('Dados do registro')
+    expect(config.areaOfInterestSectionTitle).toBe('Dados da área de interesse')
   })
 
   it('should group property fields in rows like CP layout', () => {

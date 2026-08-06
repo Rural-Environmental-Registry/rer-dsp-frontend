@@ -23,7 +23,7 @@ export const FALLBACK_INSTALLATION_CONFIG: InstallationConfig = {
       },
       detail: {
         sectionTitle: 'Search details',
-        propertySectionTitle: 'Record data',
+        areaOfInterestSectionTitle: 'Area of interest data',
         registrationDateLabel: 'Registration date',
         alterationDateLabel: 'Alteration date',
         latitudeLabel: 'Latitude',

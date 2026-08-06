@@ -15,7 +15,7 @@ export interface ScreenFieldConfig {
 
 export interface HomeDetailSearchConfig {
   sectionTitle: string
-  propertySectionTitle: string
+  areaOfInterestSectionTitle: string
   registrationDateLabel: string
   alterationDateLabel: string
   latitudeLabel: string

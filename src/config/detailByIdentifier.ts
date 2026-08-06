@@ -39,7 +39,7 @@ export interface DetailByIdentifierConfig {
 
 const DEFAULT_DETAIL_LABELS: HomeDetailSearchConfig = {
   sectionTitle: 'Search details',
-  propertySectionTitle: 'Record data',
+  areaOfInterestSectionTitle: 'Area of interest data',
   registrationDateLabel: 'Registration date',
   alterationDateLabel: 'Alteration date',
   latitudeLabel: 'Latitude',

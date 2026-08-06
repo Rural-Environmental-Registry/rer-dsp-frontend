@@ -34,7 +34,7 @@ const ptbrInstallation: InstallationConfig = {
       },
       detail: {
         sectionTitle: 'Detalhes da consulta',
-        propertySectionTitle: 'Dados do registro',
+        areaOfInterestSectionTitle: 'Dados da área de interesse',
         registrationDateLabel: 'Data de registro',
         alterationDateLabel: 'Data de alteração',
         latitudeLabel: 'Latitude',
@@ -75,7 +75,7 @@ describe('DetailSearchComponent', () => {
     })
 
     expect(wrapper.text()).toContain('Detalhes da consulta')
-    expect(wrapper.text()).toContain('Dados do registro')
+    expect(wrapper.text()).toContain('Dados da área de interesse')
     expect(wrapper.text()).toContain('DF123456789012')
     expect(wrapper.text()).toContain('Brasília')
     expect(wrapper.text()).toContain('Distrito Federal')

@@ -74,7 +74,7 @@ function onSelectOther(id: string): void {
 
       <hr class="divider" />
 
-      <h3 class="property-title">{{ config.propertySectionTitle }}</h3>
+      <h3 class="property-title">{{ config.areaOfInterestSectionTitle }}</h3>
 
       <div class="property-rows">
         <div
