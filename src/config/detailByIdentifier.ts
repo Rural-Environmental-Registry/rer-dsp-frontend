@@ -28,7 +28,7 @@ export interface DetailFieldConfig {
 
 export interface DetailByIdentifierConfig {
   sectionTitle: string
-  propertySectionTitle: string
+  areaOfInterestSectionTitle: string
   emptyValue: string
   fields: DetailFieldConfig[]
   featuresDownload: {
