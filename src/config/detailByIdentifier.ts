@@ -59,7 +59,7 @@ export function buildDetailByIdentifierConfig(
 
   return {
     sectionTitle: detail.sectionTitle,
-    propertySectionTitle: detail.propertySectionTitle,
+    areaOfInterestSectionTitle: detail.areaOfInterestSectionTitle,
     emptyValue: '—',
     fields: [
       {
