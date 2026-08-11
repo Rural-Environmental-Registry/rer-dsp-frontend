@@ -10,11 +10,13 @@ const props = withDefaults(
     items: SelectOption[]
     modelValue?: string
     disabled?: boolean
+    allowEmptySelection?: boolean
   }>(),
   {
     placeholder: 'Select',
     modelValue: '',
     disabled: false,
+    allowEmptySelection: false,
   },
 )
 
@@ -45,7 +47,7 @@ const selectedValue = computed({
         class="h-10 w-full rounded border border-gray-600/80 bg-white px-3 text-sm outline-none focus:border-[#42916e] focus:ring-1 focus:ring-[#42916e] disabled:cursor-not-allowed disabled:bg-gray-100"
         :class="{ 'pl-9': $slots.icon }"
       >
-        <option disabled value="">{{ placeholder }}</option>
+        <option :disabled="!allowEmptySelection" value="">{{ placeholder }}</option>
         <option v-for="item in items" :key="item.value" :value="item.value">
           {{ item.label }}
         </option>

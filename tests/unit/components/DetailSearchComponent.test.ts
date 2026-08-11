@@ -122,14 +122,26 @@ describe('DetailSearchComponent', () => {
     expect(rows[2].text()).toContain('Área')
   })
 
-  it('should render features download button disabled', () => {
+  it('should render features download button enabled and emit on click', async () => {
     const wrapper = mount(DetailSearchComponent, {
       props: { detail },
     })
 
-    const button = wrapper.find('button')
+    const button = wrapper.find('.actions .br-button')
     expect(button.exists()).toBe(true)
     expect(button.text()).toContain('Baixar feições')
+    expect(button.attributes('disabled')).toBeUndefined()
+
+    await button.trigger('click')
+    expect(wrapper.emitted('download-features')).toEqual([['DF123456789012']])
+  })
+
+  it('should disable features download button when detail has no id', () => {
+    const wrapper = mount(DetailSearchComponent, {
+      props: { detail: { ...detail, id: undefined } },
+    })
+
+    const button = wrapper.find('.actions .br-button')
     expect(button.attributes('disabled')).toBeDefined()
   })
 })

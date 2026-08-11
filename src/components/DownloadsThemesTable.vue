@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { downloadsUiConfig, formatDownloadLabel } from '@/config/downloadsUi'
+import LoadingDotsComponent from '@/components/LoadingDotsComponent.vue'
 import { peekInstallationConfig } from '@/services/configService'
 import type { DownloadAvailabilityStatus, DownloadItemDTO } from '@/types/download'
 import { formatDate, formatDateTime } from '@/utils/dateFormat'
@@ -28,6 +29,13 @@ function statusTitle(status: DownloadAvailabilityStatus): string {
   return ui.statusTitles[status] ?? status
 }
 
+function formatTooltip(status: DownloadAvailabilityStatus): string | undefined {
+  if (status === 'unavailable') {
+    return ui.unavailableFormatTooltip
+  }
+  return statusTitle('available')
+}
+
 function formatLastUpdate(value: string | null): string {
   if (!value) return ui.emptyValue
   if (value.includes('T') || /\d{2}:\d{2}/.test(value)) {
@@ -52,26 +60,27 @@ function formatLastUpdate(value: string | null): string {
           <td class="col-topic">{{ item.themeName }}</td>
           <td class="col-services">
             <div class="btn-geosservices-table">
-              <button
+              <span
                 v-for="formatStatus in item.formats"
                 :key="formatStatus.format"
-                type="button"
-                class="download-theme"
-                :disabled="
-                  formatStatus.status !== 'available' || isLoading(item.themeCode, formatStatus.format)
-                "
-                :title="statusTitle(formatStatus.status)"
-                @click="emit('download', item, formatStatus.format)"
+                class="download-format-wrap"
+                :title="formatTooltip(formatStatus.status)"
               >
-                <span
-                  v-if="isLoading(item.themeCode, formatStatus.format)"
-                  class="spin"
-                  aria-hidden="true"
+                <button
+                  type="button"
+                  class="download-theme"
+                  :disabled="
+                    formatStatus.status !== 'available' ||
+                    isLoading(item.themeCode, formatStatus.format)
+                  "
+                  @click="emit('download', item, formatStatus.format)"
                 >
-                  …
-                </span>
-                <span v-else>{{ formatDownloadLabel(formatStatus.format) }}</span>
-              </button>
+                  <LoadingDotsComponent
+                    v-if="isLoading(item.themeCode, formatStatus.format)"
+                  />
+                  <span v-else>{{ formatDownloadLabel(formatStatus.format) }}</span>
+                </button>
+              </span>
             </div>
           </td>
           <td class="col-update">{{ formatLastUpdate(item.lastUpdate) }}</td>
@@ -143,6 +152,15 @@ function formatLastUpdate(value: string | null): string {
   gap: 48px;
 }
 
+.download-format-wrap {
+  display: inline-flex;
+  align-items: center;
+}
+
+.download-format-wrap:has(.download-theme:disabled) {
+  cursor: help;
+}
+
 .download-theme {
   min-width: 40px;
   padding: 0;
@@ -163,20 +181,6 @@ function formatLastUpdate(value: string | null): string {
   color: #a1b3d1;
   cursor: not-allowed;
   text-decoration: none;
-}
-
-.spin {
-  display: inline-block;
-  animation: spi 1s linear infinite;
-}
-
-@keyframes spi {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
 }
 
 @media screen and (max-width: 984px) {

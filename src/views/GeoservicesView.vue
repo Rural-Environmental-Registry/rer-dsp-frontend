@@ -14,6 +14,7 @@ import {
 } from '@/services/downloadService'
 import type { DownloadItemDTO } from '@/types/download'
 import MoreContents from '@/components/MoreContents.vue'
+import LoadingDotsComponent from '@/components/LoadingDotsComponent.vue'
 import { getMoreContentsCards } from '@/config/moreContentsUi'
 
 const pageCards = getMoreContentsCards('geoservices')
@@ -74,12 +75,10 @@ function onClear(): void {
   searchError.value = ''
 }
 
-function onSelectionChange(payload: DownloadsFilterPayload): void {
-  if (!payload.level2) {
-    items.value = []
-    hasSearched.value = false
-    lastFilter.value = null
-  }
+function onSelectionChange(): void {
+  items.value = []
+  hasSearched.value = false
+  lastFilter.value = null
 }
 
 function buttonKey(themeCode: string, format: string): string {
@@ -130,7 +129,7 @@ async function onDownload(item: DownloadItemDTO, format: string): Promise<void> 
           @selection-change="onSelectionChange"
         />
 
-        <p v-if="searching" class="status-msg">Searching...</p>
+        <p v-if="searching" class="status-msg"><LoadingDotsComponent /></p>
         <p v-else-if="searchError" class="status-msg status-msg--error">{{ searchError }}</p>
         <p v-else-if="hasSearched && !items.length" class="status-msg">
           {{ ui.noResultsMessage }}

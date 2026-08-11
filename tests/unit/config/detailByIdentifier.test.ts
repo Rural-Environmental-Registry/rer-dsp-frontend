@@ -89,8 +89,8 @@ describe('detailByIdentifier config', () => {
     expect(keys).not.toContain('fiscalModules')
   })
 
-  it('should keep features download disabled for now', () => {
-    expect(detailByIdentifierConfig.featuresDownload.enabled).toBe(false)
+  it('should keep features download enabled by default', () => {
+    expect(detailByIdentifierConfig.featuresDownload.enabled).toBe(true)
     expect(detailByIdentifierConfig.featuresDownload.label).toBeTruthy()
   })
 

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { mount } from '@vue/test-utils'
 import DownloadsThemesTable from '@/components/DownloadsThemesTable.vue'
+import { resolveDownloadsUiConfig } from '@/config/downloadsUi'
 import type { DownloadItemDTO } from '@/types/download'
 
 const items: DownloadItemDTO[] = [
@@ -46,5 +47,26 @@ describe('DownloadsThemesTable', () => {
     await csvButton!.trigger('click')
 
     expect(wrapper.emitted('download')?.[0]).toEqual([items[0], 'csv'])
+  })
+
+  it('should show informative tooltip when csv is unavailable for the selected filter', () => {
+    const unavailableItems: DownloadItemDTO[] = [
+      {
+        themeCode: 'area_of_interest',
+        themeName: 'Area of interest',
+        formats: [{ format: 'csv', status: 'unavailable' }],
+        lastUpdate: null,
+      },
+    ]
+
+    const wrapper = mount(DownloadsThemesTable, {
+      props: { items: unavailableItems },
+    })
+
+    const formatWrap = wrapper.find('.download-format-wrap')
+    expect(formatWrap.attributes('title')).toBe(
+      resolveDownloadsUiConfig().unavailableFormatTooltip,
+    )
+    expect(wrapper.find('button.download-theme').attributes('disabled')).toBeDefined()
   })
 })

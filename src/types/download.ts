@@ -1,6 +1,6 @@
 export type DownloadFormatCode = 'csv' | string
 
-export type DownloadAvailabilityStatus = 'available' | 'unavailable' | 'coming_soon'
+export type DownloadAvailabilityStatus = 'available' | 'unavailable'
 
 export interface DownloadThemeDTO {
   code: string

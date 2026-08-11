@@ -11,13 +11,21 @@ import {
 import { peekInstallationConfig } from '@/services/configService'
 import { formatDate } from '@/utils/dateFormat'
 import { formatPropertyMeasures } from '@/utils/format'
+import LoadingDotsComponent from '@/components/LoadingDotsComponent.vue'
 
-const props = defineProps<{
-  detail: DetailByIdentifierDTO
-}>()
+const props = withDefaults(
+  defineProps<{
+    detail: DetailByIdentifierDTO
+    downloadingFeatures?: boolean
+  }>(),
+  {
+    downloadingFeatures: false,
+  },
+)
 
 const emit = defineEmits<{
   'select-aoi': [id: string]
+  'download-features': [id: string]
 }>()
 
 const installation = peekInstallationConfig()
@@ -49,6 +57,14 @@ function readFieldValue(field: DetailFieldConfig): string {
 
 function onSelectOther(id: string): void {
   emit('select-aoi', id)
+}
+
+function onDownloadFeatures(): void {
+  const id = props.detail.id?.trim()
+  if (!id || !config.featuresDownload.enabled || props.downloadingFeatures) {
+    return
+  }
+  emit('download-features', id)
 }
 </script>
 
@@ -112,14 +128,12 @@ function onSelectOther(id: string): void {
         <button
           type="button"
           class="br-button secondary"
-          :disabled="!config.featuresDownload.enabled"
-          :title="
-            config.featuresDownload.enabled
-              ? config.featuresDownload.label
-              : 'Coming soon'
-          "
+          :disabled="!detail.id || !config.featuresDownload.enabled || downloadingFeatures"
+          :title="config.featuresDownload.label"
+          @click="onDownloadFeatures"
         >
-          {{ config.featuresDownload.label }}
+          <LoadingDotsComponent v-if="downloadingFeatures" />
+          <template v-else>{{ config.featuresDownload.label }}</template>
         </button>
       </div>
     </div>

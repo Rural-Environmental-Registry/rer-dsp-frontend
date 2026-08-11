@@ -3,6 +3,7 @@ import { flushPromises, mount } from '@vue/test-utils'
 import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '@/views/HomeView.vue'
 import SearchFilterComponent from '@/components/SearchFilterComponent.vue'
+import DetailSearchComponent from '@/components/DetailSearchComponent.vue'
 import {
   getDetailsByCoordinates,
   getDetailsByIdentifier,
@@ -15,6 +16,16 @@ import { bboxToMapView } from '@/utils/bboxToMapView'
 
 const { scrollToElement } = vi.hoisted(() => ({
   scrollToElement: vi.fn(),
+}))
+
+const { downloadFeaturesBundle, triggerBrowserDownload } = vi.hoisted(() => ({
+  downloadFeaturesBundle: vi.fn(),
+  triggerBrowserDownload: vi.fn(),
+}))
+
+vi.mock('@/services/downloadService', () => ({
+  downloadFeaturesBundle,
+  triggerBrowserDownload,
 }))
 
 vi.mock('@/services/totalizerService', () => ({
@@ -235,6 +246,42 @@ describe('HomeView', () => {
     expect(scrollToElement).toHaveBeenCalledWith('.dsp-map')
     expect(searchFilter.vm.form.level2).toEqual(['DF'])
     expect(searchFilter.vm.form.level3).toEqual(['5300108'])
+  })
+
+  it('should download features bundle when detail panel emits download-features', async () => {
+    vi.mocked(getDetailsByIdentifier).mockResolvedValue({
+      id: 'DF123456789012',
+      registrationDate: '2020-01-10',
+      territory: {
+        level2: { id: 'DF', name: 'Distrito Federal' },
+        level3: { id: '5300108', name: 'Brasília' },
+      },
+      latitude: '-15.793889',
+      longitude: '-47.882778',
+      area: 120.5,
+      alterationDate: '2024-06-15',
+    })
+    vi.mocked(downloadFeaturesBundle).mockResolvedValue({
+      blob: new Blob(['zip']),
+      fileName: 'df123456789012_features.zip',
+    })
+
+    const wrapper = await mountHome()
+    const searchFilter = wrapper.findComponent(SearchFilterComponent)
+    await searchFilter.vm.$emit('search', {
+      level1: '',
+      level2: [],
+      level3: [],
+      identifier: 'DF123456789012',
+    })
+    await flushPromises()
+
+    const detail = wrapper.findComponent(DetailSearchComponent)
+    await detail.vm.$emit('download-features', 'DF123456789012')
+    await flushPromises()
+
+    expect(downloadFeaturesBundle).toHaveBeenCalledWith('DF123456789012')
+    expect(triggerBrowserDownload).toHaveBeenCalled()
   })
 
   it('should highlight AOI on map click without opening details until open-details', async () => {

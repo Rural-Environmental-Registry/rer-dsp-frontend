@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import {
+  downloadFeaturesBundle,
   downloadThemeFile,
   getDownloadThemes,
   searchDownloads,
@@ -61,5 +62,19 @@ describe('downloadService', () => {
       'downloads/file?level2=DF&theme=theme_alpha&format=csv',
     )
     expect(result.fileName).toBe('DF_theme_alpha.csv')
+  })
+
+  it('should download features bundle with fallback name', async () => {
+    vi.mocked(httpGetBlob).mockResolvedValue({
+      blob: new Blob(['mock']),
+      fileName: null,
+    })
+
+    const result = await downloadFeaturesBundle('DEMO-001')
+
+    expect(httpGetBlob).toHaveBeenCalledWith(
+      'downloads/features-bundle?aoiId=DEMO-001',
+    )
+    expect(result.fileName).toBe('DEMO-001_features.zip')
   })
 })

@@ -5,6 +5,7 @@ import { faSearch } from '@fortawesome/free-solid-svg-icons'
 import SelectInputComponent from '@/components/SelectInputComponent.vue'
 import MultiSelectInputComponent from '@/components/MultiSelectInputComponent.vue'
 import TextInputComponent from '@/components/TextInputComponent.vue'
+import LoadingDotsComponent from '@/components/LoadingDotsComponent.vue'
 import { territoryOptionsToSelectOptions } from '@/adapters/selectOptionAdapters'
 import {
   hierarchyFieldsByKey,
@@ -333,9 +334,9 @@ defineExpose({
     <div class="filter-container-margin">
       <span class="title-checkRegistered">{{ config.title }}</span>
 
-      <p v-if="loadingRoot" class="status-msg">Loading options...</p>
+      <p v-if="loadingRoot" class="status-msg"><LoadingDotsComponent /></p>
       <p v-else-if="loadError" class="status-msg status-msg--error">{{ loadError }}</p>
-      <p v-else-if="loadingChildren" class="status-msg">Updating options...</p>
+      <p v-else-if="loadingChildren" class="status-msg"><LoadingDotsComponent /></p>
 
       <div class="filter-fields-container">
         <div

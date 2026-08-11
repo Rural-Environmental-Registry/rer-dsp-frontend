@@ -13,6 +13,7 @@ import type { SelectOption } from '@/config/searchHierarchy'
 import { getInstallationConfig } from '@/services/configService'
 import { getTerritoryOptions } from '@/services/territoryService'
 import { territoryOptionsToSelectOptions } from '@/adapters/selectOptionAdapters'
+import LoadingDotsComponent from '@/components/LoadingDotsComponent.vue'
 import type { TerritoryOption } from '@/types/territory'
 
 export interface DownloadsFilterPayload {
@@ -139,7 +140,6 @@ async function selectLevel2(option: TerritoryOption, index: number): Promise<voi
   }
 
   emitSelection()
-  emit('search', currentPayload())
 }
 
 function handleSearch(): void {
@@ -161,7 +161,7 @@ watch(themeId, () => emitSelection())
 <template>
   <section class="filter-panel">
     <div class="filter-panel__inner">
-      <p v-if="loadingRoot" class="status-msg">Loading options...</p>
+      <p v-if="loadingRoot" class="status-msg"><LoadingDotsComponent /></p>
       <p v-else-if="loadError" class="status-msg status-msg--error">{{ loadError }}</p>
 
       <div v-else class="filter-fields">
@@ -180,7 +180,7 @@ watch(themeId, () => emitSelection())
 
         <div v-if="hasLevel1" class="level2-block">
           <p class="block-title">{{ ui.level2Title }}</p>
-          <p v-if="loadingChildren && !hasLevel2" class="status-msg">Updating options...</p>
+          <p v-if="loadingChildren && !hasLevel2" class="status-msg"><LoadingDotsComponent /></p>
           <div v-else class="chips-row">
             <HierarchyChipButton
               v-for="(option, index) in level2Options"
@@ -211,6 +211,7 @@ watch(themeId, () => emitSelection())
                   :label="ui.themeLabel"
                   :placeholder="ui.themePlaceholder"
                   :items="themeOptions"
+                  allow-empty-selection
                 />
               </div>
               <div class="filter-actions">

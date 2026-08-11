@@ -24,6 +24,7 @@ export interface DownloadsUiConfig {
   emptyValue: string
   formatLabels: Record<string, string>
   statusTitles: Record<string, string>
+  unavailableFormatTooltip: string
 }
 
 const STATIC_DOWNLOADS_UI = {
@@ -42,9 +43,9 @@ const STATIC_DOWNLOADS_UI = {
   } as Record<string, string>,
   statusTitles: {
     available: 'Download',
-    unavailable: 'File unavailable',
-    coming_soon: 'Coming soon',
+    unavailable: 'No data available for the selected filter.',
   } as Record<string, string>,
+  unavailableFormatTooltip: 'No data available for the selected filter.',
 }
 
 export function resolveDownloadsUiConfig(

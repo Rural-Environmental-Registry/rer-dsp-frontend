@@ -99,6 +99,34 @@ describe('GeoservicesView', () => {
     expect(wrapper.text()).toContain('01/06/2026')
   })
 
+  it('should hide results table when any filter value changes', async () => {
+    const wrapper = await mountGeoservicesView()
+
+    const panel = wrapper.findComponent(DownloadsFilterPanel)
+    await panel.vm.$emit('search', {
+      level1: '3',
+      level2: 'DF',
+      level3: '',
+      theme: '',
+    })
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('Theme Alpha')
+
+    await panel.vm.$emit('selection-change', {
+      level1: '3',
+      level2: 'DF',
+      level3: '5300108',
+      theme: '',
+    })
+    await flushPromises()
+
+    expect(wrapper.text()).not.toContain('Theme')
+    expect(wrapper.text()).not.toContain('Services')
+    expect(wrapper.text()).not.toContain('Last update')
+    expect(wrapper.text()).not.toContain('Theme Alpha')
+  })
+
   it('should download available CSV format', async () => {
     vi.mocked(downloadThemeFile).mockResolvedValue({
       blob: new Blob(['ok']),

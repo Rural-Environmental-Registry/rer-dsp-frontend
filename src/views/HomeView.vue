@@ -4,6 +4,7 @@ import SearchFilterComponent, {
   type SearchFilterPayload,
 } from '@/components/SearchFilterComponent.vue'
 import DetailSearchComponent from '@/components/DetailSearchComponent.vue'
+import LoadingDotsComponent from '@/components/LoadingDotsComponent.vue'
 import KpiCardComponent from '@/components/KpiCardComponent.vue'
 import {
   buildHierarchyFieldsByKey,
@@ -46,6 +47,10 @@ import type { TerritoryBoundaryBox } from '@/types/territory'
 import DspMapComponent from '@/components/DspMapComponent.vue'
 import MoreContents from '@/components/MoreContents.vue'
 import { getMoreContentsCards } from '@/config/moreContentsUi'
+import {
+  downloadFeaturesBundle,
+  triggerBrowserDownload,
+} from '@/services/downloadService'
 
 const pageCards = getMoreContentsCards('home')
 const logoRerSrc = `${import.meta.env.BASE_URL}images/Logo-RER.png`
@@ -54,6 +59,8 @@ const AOI_HIGHLIGHT_DARKEN_FILL = 0.6
 
 const searching = ref(false)
 const searchError = ref('')
+const featuresDownloading = ref(false)
+const featuresDownloadError = ref('')
 const detailByIdentifier = ref<DetailByIdentifierDTO | null>(null)
 const pendingDetail = ref<DetailByIdentifierDTO | null>(null)
 const candidateIds = ref<string[]>([])
@@ -364,6 +371,29 @@ const onSelectAoi = async (id: string) => {
   }
 }
 
+const onDownloadFeatures = async (aoiId: string) => {
+  if (!aoiId?.trim()) {
+    return
+  }
+
+  featuresDownloading.value = true
+  featuresDownloadError.value = ''
+
+  try {
+    const { blob, fileName } = await downloadFeaturesBundle(aoiId.trim())
+    triggerBrowserDownload(blob, fileName)
+  } catch (error) {
+    console.error(error)
+    if (error instanceof Error && error.message.includes('HTTP 404')) {
+      featuresDownloadError.value = 'No data available for download.'
+    } else {
+      featuresDownloadError.value = 'Could not download features.'
+    }
+  } finally {
+    featuresDownloading.value = false
+  }
+}
+
 async function loadInstallationConfig(): Promise<void> {
   const installation = await getInstallationConfig()
   searchConfig.value = buildSearchFormConfig(installation, 'home')
@@ -406,7 +436,7 @@ onMounted(async () => {
           @clear="onClear"
         />
 
-        <p v-if="searching" class="status-msg">Searching...</p>
+        <p v-if="searching" class="status-msg"><LoadingDotsComponent /></p>
         <p v-else-if="searchError" class="status-msg status-msg--error">{{ searchError }}</p>
 
         <section v-else-if="kpis.length" class="data-cards-section">
@@ -435,10 +465,16 @@ onMounted(async () => {
         />
         <div v-else class="dsp-map-placeholder" aria-hidden="true" />
 
+        <p v-if="featuresDownloadError" class="features-download-error">
+          {{ featuresDownloadError }}
+        </p>
+
         <DetailSearchComponent
           v-if="detailByIdentifier"
           :detail="detailByIdentifier"
+          :downloading-features="featuresDownloading"
           @select-aoi="onSelectAoi"
+          @download-features="onDownloadFeatures"
         />
       </div>
     </div>
@@ -520,6 +556,12 @@ onMounted(async () => {
 
 .content-general {
   width: 92%;
+}
+
+.features-download-error {
+  margin: 0 0 12px;
+  color: #b9382e;
+  font-size: 14px;
 }
 
 .dsp-map-placeholder {

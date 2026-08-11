@@ -114,7 +114,7 @@ export function buildDetailByIdentifierConfig(
     ],
     featuresDownload: {
       label: detail.featuresDownloadLabel,
-      enabled: false,
+      enabled: true,
     },
   }
 }

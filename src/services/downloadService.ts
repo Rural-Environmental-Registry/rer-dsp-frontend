@@ -40,6 +40,14 @@ export async function downloadThemeFile(params: {
   return { blob, fileName: fileName || fallback }
 }
 
+export async function downloadFeaturesBundle(
+  aoiId: string,
+): Promise<{ blob: Blob; fileName: string }> {
+  const query = new URLSearchParams({ aoiId })
+  const { blob, fileName } = await httpGetBlob(`downloads/features-bundle?${query.toString()}`)
+  return { blob, fileName: fileName || `${aoiId}_features.zip` }
+}
+
 export function triggerBrowserDownload(blob: Blob, fileName: string): void {
   const url = URL.createObjectURL(blob)
   const anchor = document.createElement('a')
