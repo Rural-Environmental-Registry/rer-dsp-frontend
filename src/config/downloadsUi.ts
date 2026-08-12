@@ -2,8 +2,6 @@ import type { InstallationConfig } from '@/types/installationConfig'
 import { FALLBACK_INSTALLATION_CONFIG } from '@/config/installationConfigFallback'
 import { buildHierarchyFieldsByKey, buildSearchFormConfig } from '@/config/searchHierarchy'
 
-export const MAX_DOWNLOAD_LEVEL1 = 5
-
 export interface DownloadsUiConfig {
   bannerTitle: string
   level1Title: string

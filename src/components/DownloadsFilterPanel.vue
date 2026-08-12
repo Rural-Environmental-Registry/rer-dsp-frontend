@@ -5,7 +5,6 @@ import { faSearch } from '@fortawesome/free-solid-svg-icons'
 import HierarchyChipButton from '@/components/HierarchyChipButton.vue'
 import SelectInputComponent from '@/components/SelectInputComponent.vue'
 import {
-  MAX_DOWNLOAD_LEVEL1,
   resolveDownloadsUiConfig,
   type DownloadsUiConfig,
 } from '@/config/downloadsUi'
@@ -90,8 +89,7 @@ async function loadLevel1(): Promise<void> {
   loadingRoot.value = true
   loadError.value = ''
   try {
-    const data = await getTerritoryOptions('level1')
-    level1Options.value = data.slice(0, MAX_DOWNLOAD_LEVEL1)
+    level1Options.value = await getTerritoryOptions('level1')
   } catch (error) {
     console.error(error)
     loadError.value = 'Could not load level 1. Check if the API is running.'

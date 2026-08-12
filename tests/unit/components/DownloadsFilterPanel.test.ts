@@ -4,7 +4,6 @@ import DownloadsFilterPanel from '@/components/DownloadsFilterPanel.vue'
 import { getInstallationConfig } from '@/services/configService'
 import { getTerritoryOptions } from '@/services/territoryService'
 import { FALLBACK_INSTALLATION_CONFIG } from '@/config/installationConfigFallback'
-import { MAX_DOWNLOAD_LEVEL1 } from '@/config/downloadsUi'
 
 vi.mock('@/services/configService', async () => {
   const { FALLBACK_INSTALLATION_CONFIG } = await import('@/config/installationConfigFallback')
@@ -194,10 +193,10 @@ describe('DownloadsFilterPanel', () => {
     })
   })
 
-  it('should respect max level1 chips', async () => {
+  it('should render all level1 options returned by the API', async () => {
     vi.mocked(getTerritoryOptions).mockImplementation(async (level) => {
       if (level === 'level1') {
-        return Array.from({ length: MAX_DOWNLOAD_LEVEL1 + 2 }, (_, index) => ({
+        return Array.from({ length: 7 }, (_, index) => ({
           id: String(index + 1),
           name: `Region ${index + 1}`,
         }))
@@ -208,6 +207,6 @@ describe('DownloadsFilterPanel', () => {
     const wrapper = mount(DownloadsFilterPanel)
     await flushPromises()
 
-    expect(wrapper.findAll('.chip-btn')).toHaveLength(MAX_DOWNLOAD_LEVEL1)
+    expect(wrapper.findAll('.chip-btn')).toHaveLength(7)
   })
 })

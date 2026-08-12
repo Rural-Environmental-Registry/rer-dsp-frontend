@@ -10,12 +10,13 @@
 flowchart LR
     Frontend((rer-dsp-frontend))
     Backend[rer-dsp-backend]
-    GeoServer[(GeoServer)]
+    GeoServerEx[(GeoServer Exhibition)]
 
     Frontend -- API REST --> Backend
-    Frontend -- mapas/WMS --> GeoServer
+    Frontend -- mapas/WMS --> GeoServerEx
 ```
 
+Downloads passam pela API do backend (que usa o GeoServer Download). O frontend de mapas fala só com o GeoServer Exhibition.
 ## Objetivo
 
 Interface web para visualização e compartilhamento de dados ambientais rurais entre
