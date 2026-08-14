@@ -98,6 +98,18 @@ function fitBounds(bounds: [[number, number], [number, number]]): void {
   }
 }
 
+function setView(center: [number, number], zoom: number): void {
+  const map = mapInstance.value
+  if (!map?.setView) {
+    return
+  }
+  try {
+    map.setView(center, zoom)
+  } catch {
+    // ignore setView errors on invalid coordinates
+  }
+}
+
 function showSelectedAoiGeometry(
   geojson: GeoJSON.GeoJsonObject,
   style: AoiHighlightStyle,
@@ -233,6 +245,7 @@ defineExpose({
   removeDetailButton,
   showSelectedAoiGeometry,
   fitBounds,
+  setView,
   clearSelection,
 })
 </script>
