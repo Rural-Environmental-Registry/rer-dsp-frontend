@@ -12,6 +12,8 @@ const {
   exitFullscreen,
   lastTooltipContentRef,
   setZoom,
+  panTo,
+  setMaxBounds,
 } = vi.hoisted(() => ({
   scrollToElementMock: vi.fn(),
   mapClickHandlers: [] as Array<(event: { latlng: { lat: number; lng: number } }) => void>,
@@ -21,6 +23,8 @@ const {
   setZoom: vi.fn((zoom: number) => {
     currentZoomRef.value = zoom
   }),
+  panTo: vi.fn(),
+  setMaxBounds: vi.fn(),
 }))
 
 vi.mock('@/utils/scrollToElement', () => ({
@@ -47,6 +51,8 @@ vi.mock('@rural-environmental-registry/map_component', async () => {
           getZoom: () => currentZoomRef.value,
           getMinZoom: () => 3,
           setZoom,
+          panTo,
+          setMaxBounds,
           on: vi.fn((event: string, handler: (event: { latlng: { lat: number; lng: number } }) => void) => {
             if (event === 'click') {
               mapClickHandlers.push(handler)
@@ -127,6 +133,44 @@ describe('DspMapComponent', () => {
     mapClickHandlers[0]({ latlng: { lat: -15.75, lng: -47.85 } })
 
     expect(wrapper.emitted('aoi-click')).toEqual([[{ lat: -15.75, lng: -47.85 }]])
+  })
+
+  it('should not apply max bounds when the map is ready', async () => {
+    await mountMap()
+
+    expect(setMaxBounds).not.toHaveBeenCalled()
+  })
+
+  it('should convert world-copy clicks to the primary map and pan the view', async () => {
+    currentZoomRef.value = DSP_ZOOM_TO_ALLOW_CLICK
+    const wrapper = await mountMap()
+
+    mapClickHandlers[0]({ latlng: { lat: -15.75, lng: -47.85 + 360 } })
+    await nextTick()
+
+    expect(wrapper.emitted('aoi-click')).toEqual([[{ lat: -15.75, lng: -47.85 }]])
+    expect(panTo).toHaveBeenCalledWith([-15.75, -47.85], { animate: false })
+  })
+
+  it('should emit normalized coordinates on map click without panning inside primary world', async () => {
+    currentZoomRef.value = DSP_ZOOM_TO_ALLOW_CLICK
+    const wrapper = await mountMap()
+
+    mapClickHandlers[0]({ latlng: { lat: 95, lng: 200 } })
+    await nextTick()
+
+    expect(wrapper.emitted('aoi-click')).toEqual([[{ lat: 90, lng: -160 }]])
+    expect(panTo).toHaveBeenCalledWith([90, -160], { animate: false })
+  })
+
+  it('should not pan when click is already on the primary world', async () => {
+    currentZoomRef.value = DSP_ZOOM_TO_ALLOW_CLICK
+    const wrapper = await mountMap()
+
+    mapClickHandlers[0]({ latlng: { lat: -15.75, lng: -47.85 } })
+
+    expect(wrapper.emitted('aoi-click')).toEqual([[{ lat: -15.75, lng: -47.85 }]])
+    expect(panTo).not.toHaveBeenCalled()
   })
 
   it('should exit fullscreen and zoom out one level when Ver Detalhes is clicked in fullscreen', async () => {

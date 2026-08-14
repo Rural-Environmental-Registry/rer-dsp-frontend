@@ -5,6 +5,10 @@ import type { MapLayers, MapOptionsConfig } from '@rural-environmental-registry/
 import { DSP_MAP_MEMORIAL, DSP_MAP_OPTIONS, DSP_ZOOM_TO_ALLOW_CLICK } from '@/config/mapOptions'
 import { loadMapLayers } from '@/services/mapService'
 import type { AoiHighlightStyle } from '@/services/geoserverAoiService'
+import {
+  isOutsidePrimaryWorldLongitude,
+  toPrimaryWorldClickCoords,
+} from '@/utils/normalizeMapCoordinates'
 import { scrollToElement } from '@/utils/scrollToElement'
 
 const DETAIL_PANEL_SELECTOR = '.dsp-aoi-details-panel'
@@ -40,6 +44,20 @@ const mapInstance = computed(() => mapRef.value?.map ?? null)
 const leaflet = computed(() => mapRef.value?.leaflet ?? null)
 const layerControl = computed(() => mapRef.value?.layerControl ?? null)
 
+function reconcileMapViewToPrimaryWorld(coords: { lat: number; lng: number }): void {
+  const map = mapInstance.value as {
+    panTo?: (latlng: [number, number], options?: { animate?: boolean }) => void
+  } | null
+  if (!map?.panTo) {
+    return
+  }
+  try {
+    map.panTo([coords.lat, coords.lng], { animate: false })
+  } catch {
+    // ignore panTo errors on invalid coordinates
+  }
+}
+
 function handleMapClick(event: { latlng: { lat: number; lng: number } }): void {
   const map = mapInstance.value
   if (!map?.getZoom) {
@@ -48,7 +66,15 @@ function handleMapClick(event: { latlng: { lat: number; lng: number } }): void {
   if (map.getZoom() < DSP_ZOOM_TO_ALLOW_CLICK) {
     return
   }
-  emit('aoi-click', { lat: event.latlng.lat, lng: event.latlng.lng })
+
+  const { lat, lng } = event.latlng
+  const coords = toPrimaryWorldClickCoords(lat, lng)
+
+  if (isOutsidePrimaryWorldLongitude(lng)) {
+    reconcileMapViewToPrimaryWorld(coords)
+  }
+
+  emit('aoi-click', coords)
 }
 
 function handleFullscreenChange(active: boolean): void {
