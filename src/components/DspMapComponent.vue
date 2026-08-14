@@ -2,7 +2,7 @@
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import MapaDPG from '@rural-environmental-registry/map_component'
 import type { MapLayers, MapOptionsConfig } from '@rural-environmental-registry/map_component/dist/types'
-import { DSP_MAP_MEMORIAL, DSP_MAP_OPTIONS } from '@/config/mapOptions'
+import { DSP_MAP_MEMORIAL, DSP_MAP_OPTIONS, DSP_ZOOM_TO_ALLOW_CLICK } from '@/config/mapOptions'
 import { loadMapLayers } from '@/services/mapService'
 import type { AoiHighlightStyle } from '@/services/geoserverAoiService'
 import { scrollToElement } from '@/utils/scrollToElement'
@@ -34,16 +34,55 @@ const mapRef = ref<InstanceType<typeof MapaDPG> | null>(null)
 const detailMarker = ref<{ remove: () => void } | null>(null)
 const highlightLayer = ref<{ remove: () => void } | null>(null)
 const clickBound = ref(false)
+const isFullscreen = ref(false)
 
 const mapInstance = computed(() => mapRef.value?.map ?? null)
 const leaflet = computed(() => mapRef.value?.leaflet ?? null)
 const layerControl = computed(() => mapRef.value?.layerControl ?? null)
 
 function handleMapClick(event: { latlng: { lat: number; lng: number } }): void {
-  if (!mapInstance.value) {
+  const map = mapInstance.value
+  if (!map?.getZoom) {
+    return
+  }
+  if (map.getZoom() < DSP_ZOOM_TO_ALLOW_CLICK) {
     return
   }
   emit('aoi-click', { lat: event.latlng.lat, lng: event.latlng.lng })
+}
+
+function handleFullscreenChange(active: boolean): void {
+  isFullscreen.value = active
+}
+
+function exitFullscreenIfNeeded(): boolean {
+  if (!isFullscreen.value) {
+    return false
+  }
+  mapRef.value?.exitFullscreen()
+  return true
+}
+
+function zoomOutOneLevel(): void {
+  const map = mapInstance.value as { getZoom?: () => number; setZoom?: (zoom: number) => void; getMinZoom?: () => number } | null
+  if (!map?.getZoom || !map?.setZoom) {
+    return
+  }
+  try {
+    const minZoom = map.getMinZoom?.() ?? 0
+    map.setZoom(Math.max(map.getZoom() - 1, minZoom))
+  } catch {
+    // ignore setZoom errors
+  }
+}
+
+function handleOpenDetailsClick(): void {
+  const wasFullscreen = exitFullscreenIfNeeded()
+  if (wasFullscreen) {
+    zoomOutOneLevel()
+  }
+  emit('open-details')
+  void nextTick(() => scrollToDetailPanel())
 }
 
 function bindMapClick(): void {
@@ -168,8 +207,7 @@ function buildDetailButtonContent(L: {
   button.addEventListener('click', (event) => {
     event.preventDefault()
     event.stopPropagation()
-    emit('open-details')
-    void nextTick(() => scrollToDetailPanel())
+    handleOpenDetailsClick()
   })
 
   return container
@@ -247,6 +285,7 @@ defineExpose({
   fitBounds,
   setView,
   clearSelection,
+  exitFullscreenIfNeeded,
 })
 </script>
 
@@ -261,14 +300,16 @@ defineExpose({
       :descriptive-memorial="DSP_MAP_MEMORIAL"
       :show-loading="false"
       :disable-loading="true"
+      @on-fullscreen-change="handleFullscreenChange"
     />
   </div>
 </template>
 
 <style scoped>
 .dsp-map {
+  --dsp-map-height: 70vh;
   width: 100%;
-  height: 520px;
+  height: var(--dsp-map-height);
   margin: 0 0 24px;
   border: 1px solid #d9d9d9;
   overflow: hidden;

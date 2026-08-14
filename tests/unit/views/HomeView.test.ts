@@ -84,12 +84,14 @@ const {
   clearSelection,
   fitBounds,
   setView,
+  exitFullscreenIfNeeded,
 } = vi.hoisted(() => ({
   showSelectedAoiGeometry: vi.fn(),
   showDetailButton: vi.fn(),
   clearSelection: vi.fn(),
   fitBounds: vi.fn(),
   setView: vi.fn(),
+  exitFullscreenIfNeeded: vi.fn(),
 }))
 
 vi.mock('@/components/DspMapComponent.vue', () => ({
@@ -132,6 +134,7 @@ vi.mock('@/components/DspMapComponent.vue', () => ({
       fitBounds,
       setView,
       clearSelection,
+      exitFullscreenIfNeeded,
     },
   },
 }))

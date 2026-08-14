@@ -629,7 +629,7 @@ onMounted(async () => {
 
 .dsp-map-placeholder {
   width: 100%;
-  height: 520px;
+  height: 70vh;
   margin: 0 0 24px;
   border: 1px solid #d9d9d9;
   background: #f5f5f5;
