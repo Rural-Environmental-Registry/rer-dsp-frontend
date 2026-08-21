@@ -15,6 +15,7 @@ import {
   type HierarchyLevelKey,
   type SearchFormConfig,
 } from '@/config/searchHierarchy'
+import { prepareAoiHighlightGeometry } from '@/utils/prepareAoiHighlightGeometry'
 import {
   mockTotalizerValues,
   resolveHomeKpis,
@@ -211,7 +212,10 @@ async function highlightAoiOnMap(
     return
   }
 
-  mapRef.value?.showSelectedAoiGeometry(geojson, resolveHighlightStyle())
+  mapRef.value?.showSelectedAoiGeometry(
+    prepareAoiHighlightGeometry(geojson),
+    resolveHighlightStyle(),
+  )
 
   const coords = resolveButtonCoords(detail, fallbackCoords)
   if (coords) {

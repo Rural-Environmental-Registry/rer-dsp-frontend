@@ -18,6 +18,7 @@
     "@fortawesome/vue-fontawesome": "^3.0.8",
     "@govbr-ds/core": "^3.6.1",
     "@rural-environmental-registry/map_component": "^1.2.0",
+    "@turf/simplify": "^7.2.0",
     "vue": "3.5.13",
     "vue-router": "4.5.0"
   },
