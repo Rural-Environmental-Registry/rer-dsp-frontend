@@ -212,8 +212,19 @@ onMounted(async () => {
   color: #333;
 }
 
+.tab-panel :deep(h1) {
+  font-size: 28px;
+  line-height: 1.25;
+}
+
 .tab-panel :deep(h2) {
   font-size: 20px;
+  line-height: 1.3;
+}
+
+.tab-panel :deep(h3) {
+  font-size: 18px;
+  line-height: 1.35;
 }
 
 .tab-panel :deep(p) {
