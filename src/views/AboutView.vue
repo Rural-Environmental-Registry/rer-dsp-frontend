@@ -25,12 +25,12 @@ const activeTabId = computed(() => {
   if (fromQuery && isAboutTabId(config.value.tabs, fromQuery)) {
     return fromQuery
   }
-  return config.value.defaultTabId
+  return config.value.tabs[0]?.id ?? null
 })
 
 const activeTab = computed(() => {
   if (!config.value || activeTabId.value === null) return undefined
-  return getAboutTabById(config.value.tabs, activeTabId.value, config.value.defaultTabId)
+  return getAboutTabById(config.value.tabs, activeTabId.value)
 })
 
 const activeTabHtml = computed(() => {
@@ -47,8 +47,9 @@ onMounted(async () => {
   try {
     config.value = await getAboutConfig()
     const fromQuery = typeof route.query.tab === 'string' ? route.query.tab : null
-    if (fromQuery && !isAboutTabId(config.value.tabs, fromQuery)) {
-      void router.replace({ query: { ...route.query, tab: config.value.defaultTabId } })
+    const firstTabId = config.value.tabs[0]?.id
+    if (fromQuery && !isAboutTabId(config.value.tabs, fromQuery) && firstTabId) {
+      void router.replace({ query: { ...route.query, tab: firstTabId } })
     }
   } catch (error) {
     console.warn('Failed to load About config.', error)
