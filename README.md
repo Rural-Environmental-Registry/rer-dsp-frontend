@@ -1,46 +1,46 @@
-# RER DSP — Frontend
+# rer-dsp-frontend
 
-**Projeto**: Rural Environmental Registry — Data Sharing Platform  
-**Componente**: Frontend (UI)  
-**Tipo**: Digital Public Good (DPG)  
-**Licença**: GPL-3.0
+> Este repositório é um dos módulos do **DSP (Data Sharing Platform)**, parte do ecossistema RER.
+> A documentação completa do projeto está em **[rer-dsp-docs](https://github.com/Rural-Environmental-Registry/rer-dsp-docs)**.
+> As informações abaixo tratam apenas deste módulo, não do projeto DSP como um todo.
 
----
+## Qual parte do DSP este módulo é
 
-## 📋 Visão Geral
+```mermaid
+flowchart LR
+    Frontend((rer-dsp-frontend))
+    Backend[rer-dsp-backend]
+    GeoServerEx[(GeoServer Exhibition)]
 
-Interface web da plataforma DSP (Data Sharing Platform) do RER. Responsável pela visualização e interação com dados ambientais rurais compartilhados entre instituições.
-
-## 🏗️ Arquitetura
-
-Este componente faz parte do ecossistema RER DSP:
-
-```
-rer-dsp-frontend  ← ESTE REPO
-    ↓
-rer-dsp-backend (API REST)
-    ↓
-rer-dsp-core (lógica de domínio)
-    ↓
-rer-dsp-job-data-migration (ETL)
-rer-dsp-job-geo-file-generation (geoespacial)
+    Frontend -- API REST --> Backend
+    Frontend -- mapas/WMS --> GeoServerEx
 ```
 
-## 🚀 Setup
+Downloads passam pela API do backend (que usa o GeoServer Download). O frontend de mapas fala só com o GeoServer Exhibition.
+## Objetivo
+
+Interface web para visualização e compartilhamento de dados ambientais rurais entre
+instituições parceiras do RER.
+
+## Responsabilidades
+
+- Exibir dados ambientais e mapas (camadas WMS)
+- Consumir a API REST do `rer-dsp-backend`
+- Prover a experiência de usuário da plataforma DSP
+
+## Tecnologias
+
+Vue 3, Vite, TypeScript, Tailwind CS.
+
+## Como executar
 
 ```bash
-# Clonar
-git clone https://github.com/Rural-Environmental-Registry/rer-dsp-frontend.git
-cd rer-dsp-frontend
-
-# Instruções de build serão adicionadas conforme desenvolvimento
+npm install
+npm run dev
 ```
 
-## 📖 Documentação
+Ou, preferencialmente, via `rer-dsp-core` (`./start.sh`), que sobe toda a stack.
 
-- [RER — Visão Geral](https://github.com/Rural-Environmental-Registry)
-- [SDD (System Design Document)](https://github.com/Rural-Environmental-Registry/core)
+## Licença
 
-## 📜 Licença
-
-Este projeto é licenciado sob a [GNU General Public License v3.0](LICENSE).
+[GNU General Public License v3.0](LICENSE)
